@@ -14,6 +14,7 @@ public static class TimeSeriesToEntityExtensions
             Currency = metaDataDto.Currency,
             Exchange = metaDataDto.Exchange,
             ExchangeTimezone = metaDataDto.ExchangeTimezone,
+            MicCode = metaDataDto.MicCode,
             Interval = metaDataDto.Interval,
         };
     }

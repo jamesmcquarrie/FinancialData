@@ -5,6 +5,6 @@ namespace FinancialData.WorkerApplication.Clients;
 
 public interface ITimeSeriesClient
 {
-    public Task<StockDto> GetStockAsync(string symbol, Interval interval, int outputSize);
-    public Task<IEnumerable<TimeSeriesDto>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize);
+    Task<StockDto> GetStockAsync(string symbol, Interval interval, int outputSize);
+    Task<IEnumerable<TimeSeriesDto>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize);
 }

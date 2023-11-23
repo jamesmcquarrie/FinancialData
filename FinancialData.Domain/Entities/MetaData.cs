@@ -8,6 +8,7 @@ public class Metadata
     public required string Currency {  get; set; }
     public required string Exchange { get; set; }
     public required string ExchangeTimezone { get; set; }
+    public required string MicCode { get; set; }
     public required string Interval { get; set; }
     public Stock? Stock { get; set; } = null!;
 }

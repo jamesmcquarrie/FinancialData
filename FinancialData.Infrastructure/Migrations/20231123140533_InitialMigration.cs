@@ -32,6 +32,7 @@ namespace FinancialData.Infrastructure.Migrations
                     Currency = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Exchange = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     ExchangeTimezone = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MicCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Interval = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>

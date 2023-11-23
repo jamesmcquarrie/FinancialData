@@ -6,6 +6,7 @@ using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;
 using FinancialData.Worker.TimeSeries;
 using System.Text.Json;
+using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
 
@@ -20,8 +21,7 @@ IHost host = Host.CreateDefaultBuilder(args)
                 .Get<RapidApiOptions>();
 
             client.BaseAddress = new Uri(options.BaseUrl);
-            client.DefaultRequestHeaders.Add("X-RapidAPI-Host", options.Host);
-            client.DefaultRequestHeaders.Add("X-RapidAPI-Key", options.Key);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", options.Key);
         })
         .ConfigurePrimaryHttpMessageHandler(() =>
         {
