@@ -17,29 +17,54 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         _timeSeriesRepository = timeSeriesRepository;
     }
 
-    public async Task CreateStockAsync(string symbol, Interval interval, int outputSize)
+    public async Task<Stock> GetStockAsync(string symbol, Interval interval, int outputSize)
     {
         var response = await _timeSeriesClient.GetStockAsync(symbol, interval, outputSize);
 
-        var stock = await _timeSeriesRepository.GetStockAsync(symbol, interval);
-
-        if (stock is null)
+        var stock = new Stock
         {
-            var newStock = new Stock
-            {
-                Metadata = response.Metadata.ToEntity(),
-                TimeSeries = response.TimeSeries.Select(ts => ts.ToEntity()).ToList()
-            };
+            Metadata = response.Metadata
+                .ToEntity(),
+            TimeSeries = response.TimeSeries
+                .Select(ts => ts.ToEntity())
+                    .ToList()
+        };
 
-            await _timeSeriesRepository.CreateStockAsync(newStock);
+        return stock;
+    }
+
+    public async Task CreateStocksAsync(IEnumerable<Stock> stocks)
+    {
+        var stocksList = new List<Stock>();
+
+        foreach (var stock in stocks)
+        {
+            var stockExists = await _timeSeriesRepository.GetStockAsync(stock.Metadata.Symbol, 
+                Interval.FromName(
+                    stock.Metadata.Interval));
+
+            if (stockExists is null)
+            {
+                stocksList.Add(stock);
+            }
+        }
+
+        if (stocksList.Any())
+        {
+            await _timeSeriesRepository.CreateStocksAsync(stocksList);
         }
     }
 
-    public async Task AddTimeSeriesAsync(string symbol, Interval interval, int outputSize)
+    public async Task<IEnumerable<TimeSeries>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize)
     {
         var response = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
-        var timeSeries = response.Select(ts => ts.ToEntity()).ToList();
+        var timeSeries = response.Select(ts => ts.ToEntity());
 
-        await _timeSeriesRepository.AddTimeSeriesToStockAsync(symbol, interval, timeSeries);
+        return timeSeries;
+    }
+
+    public async Task AddMultipleTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeseries)
+    {
+        await _timeSeriesRepository.AddTimeSeriesToStockAsync(symbol, interval, timeseries);
     }
 }

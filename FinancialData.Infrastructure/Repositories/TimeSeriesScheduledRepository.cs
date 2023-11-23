@@ -1,7 +1,7 @@
 ﻿using FinancialData.Domain.Entities;
 using Microsoft.EntityFrameworkCore;
-using FinancialData.Domain.Enums;
 using FinancialData.WorkerApplication.Repositories;
+using FinancialData.Domain.Enums;
 
 namespace FinancialData.Infrastructure.Repositories;
 
@@ -17,26 +17,37 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
     public async Task<Stock> GetStockAsync(string symbol, Interval interval)
     {
         // Fetch the Stock entity from the database
-        var stock = await _context.Stocks.Include(s => s.Metadata)
-            .FirstOrDefaultAsync(s => s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
+        var stock = await _context.Stocks
+            .Include(s => s.Metadata)
+            .FirstOrDefaultAsync(s => 
+                s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
         return stock;
     }
 
-    public async Task CreateStockAsync(Stock stock)
+    public async Task CreateStocksAsync(IEnumerable<Stock> stocks)
     {
         // Add the Stock entity to the database
-        await _context.Stocks.AddAsync(stock);
+        foreach (var stock in stocks) 
+        {
+            await _context.Stocks.AddAsync(stock);
+        }
+        
         await _context.SaveChangesAsync();
     }
 
-    public async Task AddTimeSeriesToStockAsync(string symbol, Interval interval, List<TimeSeries> timeSeries)
+    public async Task AddTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeSeries)
     {
         // Fetch the Stock entity from the database
-        var stock = await _context.Stocks.Include(s => s.Metadata)
-            .FirstOrDefaultAsync(s => s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
+        var stock = await _context.Stocks
+            .Include(s => s.Metadata)
+            .FirstOrDefaultAsync(s =>
+                s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
-        ((List<TimeSeries>)stock.TimeSeries).AddRange(timeSeries);
+        foreach (var timeSeriesItem in timeSeries) 
+        {
+            stock.TimeSeries.Add(timeSeriesItem);
+        }
 
         await _context.SaveChangesAsync();
     }

@@ -23,7 +23,7 @@ public class TimeSeriesClient : ITimeSeriesClient
     {
         var endpoint = TimeSeriesEndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
         var response = await _httpClient.GetFromJsonAsync<StockDto>(endpoint, new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
-        _logger.LogInformation("{0} called at {1}", endpoint, DateTime.Now.ToString());
+        //_logger.LogInformation("{0} called at {1}", endpoint, DateTime.Now.ToString());
 
         return response;
     }

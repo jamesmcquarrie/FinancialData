@@ -4,11 +4,14 @@ using FinancialData.WorkerApplication.Services;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;
-using FinancialData.Worker.TimeSeries;
+using FinancialData.Worker.TimeSeriesJobs;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using Microsoft.EntityFrameworkCore;
+using Polly;
 using Quartz;
+using System.Threading.RateLimiting;
+using System.Net.Http.Headers;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -30,7 +33,20 @@ IHost host = Host.CreateDefaultBuilder(args)
                 PooledConnectionLifetime = TimeSpan.FromMinutes(2)
             };
         })
-        .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
+        .AddResilienceHandler("Rate-Limiter", builder =>
+            builder.AddRateLimiter(new TokenBucketRateLimiter(
+                new TokenBucketRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    QueueLimit = 8,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(60),
+                    TokenLimit = 8,
+                    TokensPerPeriod = 8
+                })
+            )
+        );
 
         services.AddDbContext<FinancialDataContext>(options =>
             options.UseSqlServer(hostContext.Configuration.GetConnectionString("DefaultConnection")));
@@ -41,7 +57,6 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddQuartz(q =>
         {
             q.UseMicrosoftDependencyInjectionJobFactory();
-
 
             var symbols = hostContext.Configuration.GetSection("Symbols")
                 .Get<string[]>();
