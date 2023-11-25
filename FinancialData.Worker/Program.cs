@@ -11,20 +11,35 @@ using Microsoft.EntityFrameworkCore;
 using Polly;
 using Quartz;
 using System.Threading.RateLimiting;
-using System.Net.Http.Headers;
+using FinancialData.Worker;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
         services.AddLogging();
+        services.AddTransient<RateLimiterHandler>();
+
+        var tokenBucket = new TokenBucketRateLimiter(
+                new TokenBucketRateLimiterOptions
+                {
+                    AutoReplenishment = true,
+                    QueueLimit = 40,
+                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
+                    ReplenishmentPeriod = TimeSpan.FromSeconds(60),
+                    TokenLimit = 8,
+                    TokensPerPeriod = 8
+                });
+
+        services.AddSingleton<RateLimiter>(tokenBucket);
 
         services.AddHttpClient<ITimeSeriesClient, TimeSeriesClient>(client =>
         {
-            var options = hostContext.Configuration.GetSection(nameof(RapidApiOptions))
-                .Get<RapidApiOptions>();
+            var options = hostContext.Configuration.GetSection(nameof(TimeSeriesClientOptions))
+                .Get<TimeSeriesClientOptions>();
 
             client.BaseAddress = new Uri(options.BaseUrl);
             client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", options.Key);
+            client.Timeout = TimeSpan.FromMinutes(5);
         })
         .ConfigurePrimaryHttpMessageHandler(() =>
         {
@@ -34,19 +49,12 @@ IHost host = Host.CreateDefaultBuilder(args)
             };
         })
         .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
+        .AddHttpMessageHandler<RateLimiterHandler>()
         .AddResilienceHandler("Rate-Limiter", builder =>
-            builder.AddRateLimiter(new TokenBucketRateLimiter(
-                new TokenBucketRateLimiterOptions
-                {
-                    AutoReplenishment = true,
-                    QueueLimit = 8,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    ReplenishmentPeriod = TimeSpan.FromSeconds(60),
-                    TokenLimit = 8,
-                    TokensPerPeriod = 8
-                })
+            builder.AddRateLimiter(tokenBucket
             )
         );
+
 
         services.AddDbContext<FinancialDataContext>(options =>
             options.UseSqlServer(hostContext.Configuration.GetConnectionString("DefaultConnection")));
@@ -56,25 +64,23 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddQuartz(q =>
         {
-            q.UseMicrosoftDependencyInjectionJobFactory();
-
             var symbols = hostContext.Configuration.GetSection("Symbols")
                 .Get<string[]>();
-            var intervalOutputSizesOptions = hostContext.Configuration.GetSection("IntervalOutputSizeOptions")
-                .Get<IntervalOutputSizeOptions[]>();
+            var timeseriesOptions = hostContext.Configuration.GetSection("TimeSeriesOptions")
+                .Get<TimeSeriesJobOptions[]>();
 
             var serializedSymbols = JsonSerializer.Serialize<string[]>(symbols);
 
-            foreach (var intervalOutputSize in intervalOutputSizesOptions)
+            foreach (var timeseriesOption in timeseriesOptions)
             {
-                var jobKeyOnce = new JobKey($"{intervalOutputSize.Interval}-once-job");
-                var triggerKeyOnce = new TriggerKey($"{intervalOutputSize.Interval}-once-trigger");
+                var jobKeyOnce = new JobKey($"{timeseriesOption.Interval}-once-job");
+                var triggerKeyOnce = new TriggerKey($"{timeseriesOption.Interval}-once-trigger");
 
                 q.AddJob<GetStock>(options => options
                     .WithIdentity(jobKeyOnce)
                     .UsingJobData("symbols", serializedSymbols)
-                    .UsingJobData("interval", intervalOutputSize.Interval)
-                    .UsingJobData("outputSize", intervalOutputSize.OutputSize)
+                    .UsingJobData("interval", timeseriesOption.Interval)
+                    .UsingJobData("outputSize", timeseriesOption.OutputSize)
                 );
 
                 q.AddTrigger(options => options
@@ -83,24 +89,24 @@ IHost host = Host.CreateDefaultBuilder(args)
                     .StartNow()
                 );
 
-                var jobKeyRecurring = new JobKey($"{intervalOutputSize.Interval}-recurring-job");
-                var triggerKeyRecurring = new TriggerKey($"{intervalOutputSize.Interval}-recurring-trigger");
+                var jobKeyRecurring = new JobKey($"{timeseriesOption.Interval}-recurring-job");
+                var triggerKeyRecurring = new TriggerKey($"{timeseriesOption.Interval}-recurring-trigger");
 
                 q.AddJob<GetTimeSeries>(options => options
                     .WithIdentity(jobKeyRecurring)
                     .UsingJobData("symbols", serializedSymbols)
-                    .UsingJobData("interval", intervalOutputSize.Interval)
-                    .UsingJobData("outputSize", intervalOutputSize.OutputSize)
+                    .UsingJobData("interval", timeseriesOption.Interval)
+                    .UsingJobData("outputSize", timeseriesOption.OutputSize)
                 );
 
                 q.AddTrigger(options => options
                     .ForJob(jobKeyRecurring)
                     .WithIdentity(triggerKeyRecurring)
                     .WithSimpleSchedule(s => s
-                        .WithIntervalInMinutes(intervalOutputSize.OutputSize)
+                        .WithIntervalInMinutes(8)
                         .RepeatForever())
                     .StartAt(DateTimeOffset.Now.
-                        AddMinutes(intervalOutputSize.OutputSize)
+                        AddMinutes(7)
                     )
                 );
             }

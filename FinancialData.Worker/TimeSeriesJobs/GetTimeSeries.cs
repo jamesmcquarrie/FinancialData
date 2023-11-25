@@ -41,12 +41,5 @@ public class GetTimeSeries : IJob
         {
             await _timeSeriesService.AddMultipleTimeSeriesToStockAsync(deserializedSymbols[i], interval, timeseriesList[i]);
         }
-
-        //foreach (var timeseries in timeseriesList) 
-        //{
-        //    await _timeSeriesService.AddMultipleTimeSeriesToStockAsync(timeseries);
-        //}
-
-        //_logger.LogInformation("new timeseries data has been added to the {0} stock with interval: {1}", symbol, interval);
     }
 }

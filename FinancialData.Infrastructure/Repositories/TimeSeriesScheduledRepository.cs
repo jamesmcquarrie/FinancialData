@@ -36,6 +36,20 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
         await _context.SaveChangesAsync();
     }
 
+    public async Task<TimeSeries> GetTimeSerieskAsync(string symbol, Interval interval, string datetime)
+    {
+        // Fetch the Stock entity from the database
+        var stock = await _context.Stocks
+            .Include(s => s.Metadata)
+            .FirstOrDefaultAsync(s =>
+                s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
+
+        var timeseries = stock.TimeSeries
+            .FirstOrDefault(ts => ts.Datetime == datetime);
+
+        return timeseries;
+    }
+
     public async Task AddTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeSeries)
     {
         // Fetch the Stock entity from the database
