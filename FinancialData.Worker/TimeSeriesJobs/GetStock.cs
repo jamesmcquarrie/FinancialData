@@ -1,8 +1,8 @@
 ﻿using FinancialData.Domain.Entities;
 using FinancialData.Domain.Enums;
 using FinancialData.WorkerApplication.Services;
-using Quartz;
 using System.Text.Json;
+using Quartz;
 
 namespace FinancialData.Worker.TimeSeriesJobs;
 
@@ -38,7 +38,5 @@ public class GetStock : IJob
         var stocks = await Task.WhenAll(tasks);
 
         await _timeSeriesService.CreateStocksAsync(stocks);
-
-        //_logger.LogInformation("{0} stock with interval: {1} has been created", symbol, interval);
     }
 }

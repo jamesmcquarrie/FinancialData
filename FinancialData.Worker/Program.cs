@@ -5,13 +5,13 @@ using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;
 using FinancialData.Worker.TimeSeriesJobs;
+using FinancialData.Worker;
 using System.Text.Json;
 using System.Net.Http.Headers;
+using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
 using Polly;
 using Quartz;
-using System.Threading.RateLimiting;
-using FinancialData.Worker;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
@@ -19,27 +19,36 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddLogging();
         services.AddTransient<RateLimiterHandler>();
 
+        var applicationTokenBucketLimiterOptions = hostContext.Configuration
+            .GetRequiredSection(nameof(ApplicationTokenBucketLimiterOptions))
+            .Get<ApplicationTokenBucketLimiterOptions>();
+
         var tokenBucket = new TokenBucketRateLimiter(
-                new TokenBucketRateLimiterOptions
-                {
-                    AutoReplenishment = true,
-                    QueueLimit = 40,
-                    QueueProcessingOrder = QueueProcessingOrder.OldestFirst,
-                    ReplenishmentPeriod = TimeSpan.FromSeconds(60),
-                    TokenLimit = 8,
-                    TokensPerPeriod = 8
-                });
+            new TokenBucketRateLimiterOptions
+            {
+                TokenLimit = applicationTokenBucketLimiterOptions.TokenLimit,
+                TokensPerPeriod = applicationTokenBucketLimiterOptions.TokensPerPeriod,
+                ReplenishmentPeriod = TimeSpan
+                    .FromMinutes(applicationTokenBucketLimiterOptions.ReplenishmentPeriodMinutes),
+                QueueLimit = applicationTokenBucketLimiterOptions.QueueLimit,
+                QueueProcessingOrder = Enum
+                    .Parse<QueueProcessingOrder>(applicationTokenBucketLimiterOptions.QueueProcessingOrder),
+                AutoReplenishment = applicationTokenBucketLimiterOptions.AutoReplenishment,
+            });
 
         services.AddSingleton<RateLimiter>(tokenBucket);
 
         services.AddHttpClient<ITimeSeriesClient, TimeSeriesClient>(client =>
         {
-            var options = hostContext.Configuration.GetSection(nameof(TimeSeriesClientOptions))
+            var timeSeriesClientOptions = hostContext.Configuration
+                .GetRequiredSection(nameof(TimeSeriesClientOptions))
                 .Get<TimeSeriesClientOptions>();
 
-            client.BaseAddress = new Uri(options.BaseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", options.Key);
-            client.Timeout = TimeSpan.FromMinutes(5);
+            client.BaseAddress = new Uri(timeSeriesClientOptions.BaseUrl);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", hostContext.Configuration
+                .GetRequiredSection("ApiKey")
+                .Get<string>());
+            client.Timeout = TimeSpan.FromMinutes(timeSeriesClientOptions.TimeoutMinutes);
         })
         .ConfigurePrimaryHttpMessageHandler(() =>
         {
@@ -51,25 +60,24 @@ IHost host = Host.CreateDefaultBuilder(args)
         .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
         .AddHttpMessageHandler<RateLimiterHandler>()
         .AddResilienceHandler("Rate-Limiter", builder =>
-            builder.AddRateLimiter(tokenBucket
-            )
-        );
-
+            builder.AddRateLimiter(tokenBucket));
 
         services.AddDbContext<FinancialDataContext>(options =>
             options.UseSqlServer(hostContext.Configuration.GetConnectionString("DefaultConnection")));
-        
+
         services.AddScoped<ITimeSeriesScheduledService, TimeSeriesScheduledService>();
         services.AddScoped<ITimeSeriesScheduledRepository, TimeSeriesScheduledRepository>();
 
         services.AddQuartz(q =>
         {
-            var symbols = hostContext.Configuration.GetSection("Symbols")
+            var symbols = hostContext.Configuration
+                .GetRequiredSection("Symbols")
                 .Get<string[]>();
-            var timeseriesOptions = hostContext.Configuration.GetSection("TimeSeriesOptions")
-                .Get<TimeSeriesJobOptions[]>();
-
             var serializedSymbols = JsonSerializer.Serialize<string[]>(symbols);
+
+            var timeseriesOptions = hostContext.Configuration
+                .GetRequiredSection("TimeSeriesOptions")
+                .Get<TimeSeriesJobOptions[]>();
 
             foreach (var timeseriesOption in timeseriesOptions)
             {
@@ -103,10 +111,10 @@ IHost host = Host.CreateDefaultBuilder(args)
                     .ForJob(jobKeyRecurring)
                     .WithIdentity(triggerKeyRecurring)
                     .WithSimpleSchedule(s => s
-                        .WithIntervalInMinutes(8)
+                        .WithIntervalInMinutes(timeseriesOption.DelayMinutes)
                         .RepeatForever())
                     .StartAt(DateTimeOffset.Now.
-                        AddMinutes(7)
+                        AddMinutes(timeseriesOption.DelayMinutes)
                     )
                 );
             }
