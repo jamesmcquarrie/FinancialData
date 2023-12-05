@@ -1,13 +1,14 @@
-﻿using System.Threading.RateLimiting;
+﻿using Microsoft.Extensions.Logging;
+using System.Threading.RateLimiting;
 
-namespace FinancialData.Worker;
+namespace FinancialData.WorkerApplication.Handlers;
 
-class RateLimiterHandler : DelegatingHandler
+public class DebugRateLimiterHandler : DelegatingHandler
 {
-    private ILogger<RateLimiterHandler> _logger;
+    private ILogger<DebugRateLimiterHandler> _logger;
     private readonly RateLimiter _rateLimiter;
 
-    public RateLimiterHandler(ILogger<RateLimiterHandler> logger,
+    public DebugRateLimiterHandler(ILogger<DebugRateLimiterHandler> logger,
         RateLimiter limiter)
     {
         _logger = logger;

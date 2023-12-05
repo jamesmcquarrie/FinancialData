@@ -1,11 +1,11 @@
 using FinancialData.WorkerApplication.Clients;
+using FinancialData.WorkerApplication.Handlers;
 using FinancialData.WorkerApplication.Repositories;
 using FinancialData.WorkerApplication.Services;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;
 using FinancialData.Worker.TimeSeriesJobs;
-using FinancialData.Worker;
 using System.Text.Json;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
@@ -17,7 +17,33 @@ IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
         services.AddLogging();
-        services.AddTransient<RateLimiterHandler>();
+
+        var httpClientBuilder = services.AddHttpClient<ITimeSeriesClient, TimeSeriesClient>(client =>
+        {
+            var timeSeriesClientOptions = hostContext.Configuration
+                .GetRequiredSection(nameof(TimeSeriesClientOptions))
+                .Get<TimeSeriesClientOptions>();
+
+            client.BaseAddress = new Uri(timeSeriesClientOptions.BaseUrl);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", hostContext.Configuration
+                .GetRequiredSection("ApiKey")
+                .Get<string>());
+            client.Timeout = TimeSpan.FromMinutes(timeSeriesClientOptions.TimeoutMinutes);
+        })
+        .ConfigurePrimaryHttpMessageHandler(() =>
+        {
+            return new SocketsHttpHandler()
+            {
+                PooledConnectionLifetime = TimeSpan.FromMinutes(2)
+            };
+        })
+        .SetHandlerLifetime(Timeout.InfiniteTimeSpan);
+        
+        if (hostContext.HostingEnvironment.IsDevelopment())
+        {
+            services.AddTransient<DebugRateLimiterHandler>();
+            httpClientBuilder.AddHttpMessageHandler<DebugRateLimiterHandler>();
+        }
 
         var applicationTokenBucketLimiterOptions = hostContext.Configuration
             .GetRequiredSection(nameof(ApplicationTokenBucketLimiterOptions))
@@ -38,28 +64,7 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddSingleton<RateLimiter>(tokenBucket);
 
-        services.AddHttpClient<ITimeSeriesClient, TimeSeriesClient>(client =>
-        {
-            var timeSeriesClientOptions = hostContext.Configuration
-                .GetRequiredSection(nameof(TimeSeriesClientOptions))
-                .Get<TimeSeriesClientOptions>();
-
-            client.BaseAddress = new Uri(timeSeriesClientOptions.BaseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", hostContext.Configuration
-                .GetRequiredSection("ApiKey")
-                .Get<string>());
-            client.Timeout = TimeSpan.FromMinutes(timeSeriesClientOptions.TimeoutMinutes);
-        })
-        .ConfigurePrimaryHttpMessageHandler(() =>
-        {
-            return new SocketsHttpHandler()
-            {
-                PooledConnectionLifetime = TimeSpan.FromMinutes(2)
-            };
-        })
-        .SetHandlerLifetime(Timeout.InfiniteTimeSpan)
-        .AddHttpMessageHandler<RateLimiterHandler>()
-        .AddResilienceHandler("Rate-Limiter", builder =>
+        httpClientBuilder.AddResilienceHandler("Rate-Limiter", builder =>
             builder.AddRateLimiter(tokenBucket));
 
         services.AddDbContext<FinancialDataContext>(options =>

@@ -20,26 +20,41 @@ public class GetTimeSeries : IJob
 
     public async Task Execute(IJobExecutionContext context)
     {
-        var dataMap = context.MergedJobDataMap;
-
-        var symbols = dataMap.GetString("symbols");
-        var interval = Interval.FromName(dataMap
-            .GetString("interval"));
-        var outputSize = dataMap.GetInt("outputSize");
-
-        var deserializedSymbols = JsonSerializer.Deserialize<string[]>(symbols);
-        var tasks = new List<Task<IEnumerable<TimeSeries>>>();
-
-        foreach (var symbol in deserializedSymbols) 
+        try
         {
-            tasks.Add(_timeSeriesService.GetTimeSeriesAsync(symbol, interval, outputSize));
+            var dataMap = context.MergedJobDataMap;
+
+            var symbols = dataMap.GetString("symbols");
+            var interval = Interval.FromName(dataMap
+                .GetString("interval"));
+            var outputSize = dataMap.GetInt("outputSize");
+
+            var deserializedSymbols = JsonSerializer.Deserialize<string[]>(symbols);
+            var tasks = new List<Task<IEnumerable<TimeSeries>>>();
+
+            foreach (string symbol in deserializedSymbols)
+            {
+                var timeSeries = _timeSeriesService.GetTimeSeriesAsync(symbol, interval, outputSize);
+                if (timeSeries is not null)
+                {
+                    tasks.Add(timeSeries);
+                }
+            }
+
+            var timeseriesList = await Task.WhenAll(tasks);
+
+            for (int i = 0; i < deserializedSymbols.Length; i++)
+            {
+                await _timeSeriesService.AddMultipleTimeSeriesToStockAsync(deserializedSymbols[i], interval, timeseriesList[i]);
+            }
         }
 
-        var timeseriesList = await Task.WhenAll(tasks);
-
-        for (int i = 0; i < deserializedSymbols.Length; i++) 
+        catch (Exception ex)
         {
-            await _timeSeriesService.AddMultipleTimeSeriesToStockAsync(deserializedSymbols[i], interval, timeseriesList[i]);
+            _logger.LogError("--- Error in job!");
+            var wrappedException = new JobExecutionException(ex);
+            wrappedException.UnscheduleAllTriggers = true;
+            throw wrappedException;
         }
     }
 }

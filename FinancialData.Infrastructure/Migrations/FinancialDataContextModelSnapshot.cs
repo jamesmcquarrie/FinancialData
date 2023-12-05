@@ -41,7 +41,7 @@ namespace FinancialData.Infrastructure.Migrations
 
                     b.Property<string>("Interval")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("MicCode")
                         .IsRequired()
@@ -49,13 +49,16 @@ namespace FinancialData.Infrastructure.Migrations
 
                     b.Property<string>("Symbol")
                         .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("Symbol", "Interval")
+                        .IsUnique();
 
                     b.ToTable("MetaData");
                 });

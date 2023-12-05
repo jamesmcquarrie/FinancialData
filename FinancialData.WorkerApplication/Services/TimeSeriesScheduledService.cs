@@ -28,23 +28,33 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
         try
         {
-            var response = await _timeSeriesClient.GetStockAsync(symbol, interval, outputSize);
+            var clientResult = await _timeSeriesClient.GetStockAsync(symbol, interval, outputSize);
 
-            stock = new Stock
+            if (!clientResult.IsError)
             {
-                Metadata = response.Metadata
-                    .ToEntity(),
-                TimeSeries = response.TimeSeries
-                    .Select(ts => ts.ToEntity())
-                        .ToList()
-            };
+                stock = new Stock
+                {
+                    Metadata = clientResult.Result!
+                        .Metadata
+                        .ToEntity(),
+                    TimeSeries = clientResult.Result!
+                        .TimeSeries
+                        .Select(ts => ts.ToEntity())
+                            .ToList()
+                };
+            }
         }
 
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
-            _logger.LogError("The Twelve Data API has a rate limit of 8 requests per minute." +
-                " Not enough time is allowed to complete all of the requests." +
-                " Please configure the Http Client Timeout to a higher value.");
+            _logger.LogError($"{ex.Message} - Please increase the timeout duration.");
+            throw;
+        }
+
+        catch (Exception ex) 
+        {
+            _logger.LogError(ex, "Unexpected error encountered whilst retrieving symbol: {} interval: {} - EXCEPTION MESSAGE: {}", symbol, interval.Name, ex.Message);
+            throw;
         }
 
         return stock;
@@ -78,15 +88,25 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
         try
         {
-            var response = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
-            timeseries = response.Select(ts => ts.ToEntity());
+            var clientResult = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
+
+            if (!clientResult.IsError)
+            {
+                timeseries = clientResult.Result!
+                    .Select(ts => ts.ToEntity());
+            }
         }
 
-        catch (TaskCanceledException)
+        catch (TaskCanceledException ex)
         {
-            _logger.LogError("The Twelve Data API has a rate limit of 8 requests per minute." +
-                " Not enough time is allowed to complete all of the requests." +
-                " Please configure the Http Client Timeout to a higher value.");
+            _logger.LogError($"{ex.Message} - Please increase the timeout duration.");
+            throw;
+        }
+
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Unexpected error encountered whilst retrieving symbol: {} interval: {} - EXCEPTION MESSAGE: {}", symbol, interval.Name, ex.Message);
+            throw;
         }
 
         return timeseries;
@@ -98,7 +118,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
         foreach (var timeseriesItem in timeseries)
         {
-            var timeseriesExists = await _timeSeriesRepository.GetTimeSerieskAsync(symbol, interval, timeseriesItem.Datetime);
+            var timeseriesExists = await _timeSeriesRepository.GetTimeSeriesAsync(symbol, interval, timeseriesItem.Datetime);
 
             if (timeseriesExists is null)
             {
