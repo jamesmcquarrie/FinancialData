@@ -1,0 +1,202 @@
+[
+  {
+    "Symbol": "MSFT",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "MSFT",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "MSFT",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "MSFT",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "AAPL",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "AAPL",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "AAPL",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "AAPL",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "AMZN",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "AMZN",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "AMZN",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "AMZN",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "NVDA",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "NVDA",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "NVDA",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "NVDA",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "GOOGL",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "GOOGL",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "GOOGL",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "GOOGL",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "META",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "META",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "META",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "META",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "TSLA",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "TSLA",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "TSLA",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "TSLA",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "UNH",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "UNH",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "UNH",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "UNH",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "BRK.B",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "BRK.B",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "BRK.B",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "BRK.B",
+    "Interval": "1h",
+    "OutputSize": 7
+  },
+  {
+    "Symbol": "GOOG",
+    "Interval": "5min",
+    "OutputSize": 78
+  },
+  {
+    "Symbol": "GOOG",
+    "Interval": "15min",
+    "OutputSize": 26
+  },
+  {
+    "Symbol": "GOOG",
+    "Interval": "30min",
+    "OutputSize": 13
+  },
+  {
+    "Symbol": "GOOG",
+    "Interval": "1h",
+    "OutputSize": 7
+  }
+]

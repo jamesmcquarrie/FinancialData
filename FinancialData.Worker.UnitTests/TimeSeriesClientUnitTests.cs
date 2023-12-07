@@ -1,12 +1,10 @@
 ﻿using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
-using Castle.Core.Logging;
 using FinancialData.Common.Dtos;
 using FinancialData.Domain.Enums;
 using FinancialData.WorkerApplication.Clients;
 using FinancialData.WorkerApplication.StatusMessages;
-using Microsoft.Extensions.Logging;
 using RichardSzalay.MockHttp;
 
 namespace FinancialData.Worker.UnitTests;
@@ -17,47 +15,17 @@ public class TimeSeriesClientUnitTests
     public async Task GetStockAsync_GetsSuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
-        var metaDataDto = new MetadataDto
-        {
-            Symbol = "MSFT",
-            Type = "Common Stock",
-            Currency = "USD",
-            Exchange = "NASDAQ",
-            ExchangeTimezone = "America/New_York",
-            MicCode = "XNGS",
-            Interval = "5min"
-        };
-
-        var timeseriesDto = new List<TimeSeriesDto>()
-        {
-            new TimeSeriesDto
-            {
-                Datetime = "2023-11-28 15:55:00",
-                High = "382.76001",
-                Low = "382.03000",
-                Open = "382.03000",
-                Close = "382.70001",
-                Volume = "1118579"
-            },
-            new TimeSeriesDto
-            {
-                Datetime = "2023-11-28 15:50:00",
-                High = "382.04999",
-                Low = "381.26999",
-                Open = "381.29001",
-                Close = "382.03000",
-                Volume = "501357"
-            }
-        };
-
+        var fixture = new Fixture();
+        var metadataDto = fixture.Create<MetadataDto>();
+        var timeseriesDtos = fixture.CreateMany<TimeSeriesDto>()
+            .ToList();
         var stockDto = new StockDto
         {
-            Metadata = metaDataDto,
-            TimeSeries = timeseriesDto,
+            Metadata = metadataDto,
+            TimeSeries = timeseriesDtos,
         };
 
         mockHttpClient.When(uri)
@@ -68,7 +36,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync("MSFT", Interval.FiveMinute, 2);
@@ -77,14 +45,13 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeFalse();
         clientResult.ErrorMessage.Should().BeNull();
-        clientResult.Result.Should().BeEquivalentTo(stockDto);
+        clientResult.Payload.Should().BeEquivalentTo(stockDto);
     }
 
     [Fact]
     public async Task GetStockAsync_TooManyRequests_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -95,7 +62,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync("MSFT", Interval.FiveMinute, 2);
@@ -104,14 +71,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.TooManyRequestsMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetStockAsync_Unauthorised_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -122,7 +89,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync("MSFT", Interval.FiveMinute, 2);
@@ -131,14 +98,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.UnauthorisedMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetStockAsync_NotFound_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -149,7 +116,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync("MSFT", Interval.FiveMinute, 2);
@@ -158,14 +125,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.NotFoundMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetStockAsync_BadRequest_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -176,7 +143,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync("MSFT", Interval.FiveMinute, 2);
@@ -185,54 +152,25 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.BadRequestMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_GetsSuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
-        var metaDataDto = new MetadataDto
-        {
-            Symbol = "MSFT",
-            Type = "Common Stock",
-            Currency = "USD",
-            Exchange = "NASDAQ",
-            ExchangeTimezone = "America/New_York",
-            MicCode = "XNGS",
-            Interval = "5min"
-        };
-
-        var timeseriesDto = new List<TimeSeriesDto>()
-        {
-            new TimeSeriesDto
-            {
-                Datetime = "2023-11-28 15:55:00",
-                High = "382.76001",
-                Low = "382.03000",
-                Open = "382.03000",
-                Close = "382.70001",
-                Volume = "1118579"
-            },
-            new TimeSeriesDto
-            {
-                Datetime = "2023-11-28 15:50:00",
-                High = "382.04999",
-                Low = "381.26999",
-                Open = "381.29001",
-                Close = "382.03000",
-                Volume = "501357"
-            }
-        };
-
+        var fixture = new Fixture();
+        var metadataDto = fixture.Create<MetadataDto>();
+        var timeseriesDtos = fixture.CreateMany<TimeSeriesDto>()
+            .ToList();
         var stockDto = new StockDto
         {
-            Metadata = metaDataDto,
-            TimeSeries = timeseriesDto,
+            Metadata = metadataDto,
+            TimeSeries = timeseriesDtos,
         };
 
         mockHttpClient.When(uri)
@@ -243,7 +181,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync("MSFT", Interval.FiveMinute, 2);
@@ -252,14 +190,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeFalse();
         clientResult.ErrorMessage.Should().BeNull();
-        clientResult.Result.Should().BeEquivalentTo(timeseriesDto);
+        clientResult.Payload.Should().BeEquivalentTo(timeseriesDtos);
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_TooManyRequests_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -270,7 +208,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync("MSFT", Interval.FiveMinute, 2);
@@ -279,14 +217,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.TooManyRequestsMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_Unauthorised_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -297,7 +235,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync("MSFT", Interval.FiveMinute, 2);
@@ -306,14 +244,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.UnauthorisedMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_NotFound_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -324,7 +262,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync("MSFT", Interval.FiveMinute, 2);
@@ -333,14 +271,14 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.NotFoundMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 
     [Fact]
     public async Task GetTimeSeriesAsync_BadRequest_GetsUnsuccessfully()
     {
         //Arrange
-        var logger = Substitute.For<ILogger<TimeSeriesClient>>();
+
         var mockHttpClient = new MockHttpMessageHandler();
         var uri = "https://api.twelvedata.com/time_series?symbol=MSFT&interval=5min&outputsize=2";
 
@@ -351,7 +289,7 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(logger, httpClient);
+        var timeSeriesClient = new TimeSeriesClient(httpClient);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync("MSFT", Interval.FiveMinute, 2);
@@ -360,6 +298,6 @@ public class TimeSeriesClientUnitTests
         clientResult.Should().NotBeNull();
         clientResult.IsError.Should().BeTrue();
         clientResult.ErrorMessage.Should().Be(TwelveDataStatusMessages.BadRequestMessage);
-        clientResult.Result.Should().BeNull();
+        clientResult.Payload.Should().BeNull();
     }
 }

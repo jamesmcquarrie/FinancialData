@@ -6,19 +6,15 @@ using System.Net;
 using System.Net.Http.Json;
 using FinancialData.WorkerApplication.Abstractions;
 using FinancialData.WorkerApplication.StatusMessages;
-using Microsoft.Extensions.Logging;
 
 namespace FinancialData.WorkerApplication.Clients;
 
 public class TimeSeriesClient : ITimeSeriesClient
 {
-    private readonly ILogger<TimeSeriesClient> _logger;
-    private HttpClient _httpClient;
+    private readonly HttpClient _httpClient;
 
-    public TimeSeriesClient(ILogger<TimeSeriesClient> logger,
-        HttpClient httpClient)
+    public TimeSeriesClient(HttpClient httpClient)
     {
-        _logger = logger;
         _httpClient = httpClient;
     }
 
@@ -35,14 +31,7 @@ public class TimeSeriesClient : ITimeSeriesClient
                 .ReadFromJsonAsync<StockDto>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            _logger.LogInformation("Stock for symbol: {} interval: {} retrieved", symbol, interval.Name);
-
-            result.Result = stockDto;
-        }
-
-        else
-        {
-            _logger.LogError("Stock for symbol: {} interval: {} not retrieved - ERROR MESSAGE: {}", symbol, interval.Name, result.ErrorMessage);
+            result.Payload = stockDto;
         }
 
         return result;
@@ -61,16 +50,8 @@ public class TimeSeriesClient : ITimeSeriesClient
                 .ReadFromJsonAsync<StockDto>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
-            _logger.LogInformation("Timeseries for symbol: {} interval: {} retrieved", symbol, interval.Name);
-
-            result.Result = stockDto!.TimeSeries;
+            result.Payload = stockDto!.TimeSeries;
         }
-
-        else
-        {
-            _logger.LogError("Timeseries for symbol: {} interval: {} not retrieved - ERROR MESSAGE: {}", symbol, interval.Name, result.ErrorMessage);
-        }
-
 
         return result;
     }

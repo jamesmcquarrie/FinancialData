@@ -2,19 +2,15 @@
 using Microsoft.EntityFrameworkCore;
 using FinancialData.WorkerApplication.Repositories;
 using FinancialData.Domain.Enums;
-using Microsoft.Extensions.Logging;
 
 namespace FinancialData.Infrastructure.Repositories;
 
 public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
 {
-    private readonly ILogger<TimeSeriesScheduledRepository> _logger;
     private readonly FinancialDataContext _context;
 
-    public TimeSeriesScheduledRepository(ILogger<TimeSeriesScheduledRepository> logger, 
-        FinancialDataContext context)
+    public TimeSeriesScheduledRepository(FinancialDataContext context)
     {
-        _logger = logger;
         _context = context;
     }
 
@@ -25,8 +21,6 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
             .FirstOrDefaultAsync(s => 
                 s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
-        _logger.LogInformation("Stock for symbol: {} interval: {} has been retrieved from database", symbol, interval.Name);
-
         return stock;
     }
 
@@ -35,23 +29,17 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
         await _context.Stocks.AddRangeAsync(stocks);
 
         await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Stocks have been persisted to database");
     }
 
-    public async Task<TimeSeries> GetTimeSeriesAsync(string symbol, Interval interval, string datetime)
+    public async Task<IEnumerable<TimeSeries>> GetTimeSeriesAsync(string symbol, Interval interval)
     {
         var stock = await _context.Stocks
-            .Include(s => s.Metadata)
-            .FirstOrDefaultAsync(s =>
-                s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
+           .Include(s => s.Metadata)
+           .Include(s => s.TimeSeries)
+           .FirstOrDefaultAsync(s =>
+               s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
-        var timeseries = stock.TimeSeries
-            .FirstOrDefault(ts => ts.Datetime == datetime);
-
-        _logger.LogInformation("Timeseries for symbol: {} interval: {} has been retrieved from database", symbol, interval.Name);
-
-        return timeseries;
+        return stock.TimeSeries;
     }
 
     public async Task AddTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeSeries)
@@ -67,7 +55,5 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
         }
 
         await _context.SaveChangesAsync();
-
-        _logger.LogInformation("Timeseries for symbol: {} interval: {} has been persisted to database", symbol, interval.Name);
     }
 }

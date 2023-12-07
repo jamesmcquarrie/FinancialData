@@ -1,8 +1,7 @@
-﻿using FinancialData.Domain.Entities;
-using FinancialData.Domain.Enums;
-using FinancialData.WorkerApplication.Services;
+﻿using FinancialData.WorkerApplication.Services;
 using System.Text.Json;
 using Quartz;
+using FinancialData.Common.Configuration;
 
 namespace FinancialData.Worker.TimeSeriesJobs;
 
@@ -23,27 +22,15 @@ public class GetStock : IJob
         try
         {
             var dataMap = context.MergedJobDataMap;
+            var timeseriesArgsString = dataMap.GetString("timeseriesOptions");
+            var timeseriesArgs = JsonSerializer.Deserialize<TimeSeriesArguments[]>(timeseriesArgsString);
 
-            var interval = Interval.FromName(dataMap
-               .GetString("interval"));
-            var symbols = dataMap.GetString("symbols");
-            var outputSize = dataMap.GetInt("outputSize");
+            var stocks = await _timeSeriesService.GetStocksAsync(timeseriesArgs);
 
-            var deserializedSymbols = JsonSerializer.Deserialize<string[]>(symbols);
-            var tasks = new List<Task<Stock>>();
-
-            foreach (string symbol in deserializedSymbols)
+            if (stocks.Any())
             {
-                var stock = _timeSeriesService.GetStockAsync(symbol, interval, outputSize);
-                if (stock is not null) 
-                {
-                    tasks.Add(stock);
-                }
+                await _timeSeriesService.CreateStocksAsync(stocks);
             }
-
-            var stocks = await Task.WhenAll(tasks);
-
-            await _timeSeriesService.CreateStocksAsync(stocks);
         }
 
         catch (Exception ex) 

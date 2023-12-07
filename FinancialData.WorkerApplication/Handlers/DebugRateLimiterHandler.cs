@@ -5,7 +5,7 @@ namespace FinancialData.WorkerApplication.Handlers;
 
 public class DebugRateLimiterHandler : DelegatingHandler
 {
-    private ILogger<DebugRateLimiterHandler> _logger;
+    private readonly ILogger<DebugRateLimiterHandler> _logger;
     private readonly RateLimiter _rateLimiter;
 
     public DebugRateLimiterHandler(ILogger<DebugRateLimiterHandler> logger,
@@ -18,7 +18,6 @@ public class DebugRateLimiterHandler : DelegatingHandler
     protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
     {
         var stats = _rateLimiter.GetStatistics();
-
 
         _logger.LogDebug(
             "Available Permits: {}\n" +

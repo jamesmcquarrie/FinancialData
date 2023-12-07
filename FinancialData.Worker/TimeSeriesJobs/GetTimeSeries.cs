@@ -1,8 +1,8 @@
 ﻿using FinancialData.WorkerApplication.Services;
-using FinancialData.Domain.Entities;
 using FinancialData.Domain.Enums;
 using System.Text.Json;
 using Quartz;
+using FinancialData.Common.Configuration;
 
 namespace FinancialData.Worker.TimeSeriesJobs;
 
@@ -23,29 +23,17 @@ public class GetTimeSeries : IJob
         try
         {
             var dataMap = context.MergedJobDataMap;
+            var timeseriesArgsString = dataMap.GetString("timeseriesOptions");
+            var timeseriesArgs = JsonSerializer.Deserialize<TimeSeriesArguments[]>(timeseriesArgsString);
 
-            var symbols = dataMap.GetString("symbols");
-            var interval = Interval.FromName(dataMap
-                .GetString("interval"));
-            var outputSize = dataMap.GetInt("outputSize");
+            var timeseriesDictionary = await _timeSeriesService.GetTimeSeriesAsync(timeseriesArgs);
 
-            var deserializedSymbols = JsonSerializer.Deserialize<string[]>(symbols);
-            var tasks = new List<Task<IEnumerable<TimeSeries>>>();
-
-            foreach (string symbol in deserializedSymbols)
+            foreach (var entry in timeseriesDictionary) 
             {
-                var timeSeries = _timeSeriesService.GetTimeSeriesAsync(symbol, interval, outputSize);
-                if (timeSeries is not null)
-                {
-                    tasks.Add(timeSeries);
-                }
-            }
+                var arg = entry.Key;
+                var timeseries = entry.Value;
 
-            var timeseriesList = await Task.WhenAll(tasks);
-
-            for (int i = 0; i < deserializedSymbols.Length; i++)
-            {
-                await _timeSeriesService.AddMultipleTimeSeriesToStockAsync(deserializedSymbols[i], interval, timeseriesList[i]);
+                await _timeSeriesService.AddTimeSeriesToStockAsync(arg.Symbol, Interval.FromName(arg.Interval), timeseries);
             }
         }
 

@@ -6,7 +6,6 @@ using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;
 using FinancialData.Worker.TimeSeriesJobs;
-using System.Text.Json;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
 using Microsoft.EntityFrameworkCore;
@@ -75,54 +74,43 @@ IHost host = Host.CreateDefaultBuilder(args)
 
         services.AddQuartz(q =>
         {
-            var symbols = hostContext.Configuration
-                .GetRequiredSection("Symbols")
-                .Get<string[]>();
-            var serializedSymbols = JsonSerializer.Serialize<string[]>(symbols);
+            var timeseriesOptionstring = File.ReadAllText("timeseriesOptions.json");
+            var delay = hostContext.Configuration
+                .GetRequiredSection("DelayMinutes")
+                .Get<int>();
 
-            var timeseriesOptions = hostContext.Configuration
-                .GetRequiredSection("TimeSeriesOptions")
-                .Get<TimeSeriesJobOptions[]>();
+            var jobKeyOnce = new JobKey("once-job");
+            var triggerKeyOnce = new TriggerKey("once-trigger");
 
-            foreach (var timeseriesOption in timeseriesOptions)
-            {
-                var jobKeyOnce = new JobKey($"{timeseriesOption.Interval}-once-job");
-                var triggerKeyOnce = new TriggerKey($"{timeseriesOption.Interval}-once-trigger");
+            q.AddJob<GetStock>(options => options
+                .WithIdentity(jobKeyOnce)
+                .UsingJobData("timeseriesOptions", timeseriesOptionstring)
+            );
 
-                q.AddJob<GetStock>(options => options
-                    .WithIdentity(jobKeyOnce)
-                    .UsingJobData("symbols", serializedSymbols)
-                    .UsingJobData("interval", timeseriesOption.Interval)
-                    .UsingJobData("outputSize", timeseriesOption.OutputSize)
-                );
+            q.AddTrigger(options => options
+                .ForJob(jobKeyOnce)
+                .WithIdentity(triggerKeyOnce)
+                .StartNow()
+            );
 
-                q.AddTrigger(options => options
-                    .ForJob(jobKeyOnce)
-                    .WithIdentity(triggerKeyOnce)
-                    .StartNow()
-                );
+            var jobKeyRecurring = new JobKey("recurring-job");
+            var triggerKeyRecurring = new TriggerKey("recurring-trigger");
 
-                var jobKeyRecurring = new JobKey($"{timeseriesOption.Interval}-recurring-job");
-                var triggerKeyRecurring = new TriggerKey($"{timeseriesOption.Interval}-recurring-trigger");
+            q.AddJob<GetTimeSeries>(options => options
+                .WithIdentity(jobKeyRecurring)
+                .UsingJobData("timeseriesOptions", timeseriesOptionstring)
+            );
 
-                q.AddJob<GetTimeSeries>(options => options
-                    .WithIdentity(jobKeyRecurring)
-                    .UsingJobData("symbols", serializedSymbols)
-                    .UsingJobData("interval", timeseriesOption.Interval)
-                    .UsingJobData("outputSize", timeseriesOption.OutputSize)
-                );
-
-                q.AddTrigger(options => options
-                    .ForJob(jobKeyRecurring)
-                    .WithIdentity(triggerKeyRecurring)
-                    .WithSimpleSchedule(s => s
-                        .WithIntervalInMinutes(timeseriesOption.DelayMinutes)
-                        .RepeatForever())
-                    .StartAt(DateTimeOffset.Now.
-                        AddMinutes(timeseriesOption.DelayMinutes)
-                    )
-                );
-            }
+            q.AddTrigger(options => options
+                .ForJob(jobKeyRecurring)
+                .WithIdentity(triggerKeyRecurring)
+                .WithSimpleSchedule(s => s
+                    .WithIntervalInMinutes(5)
+                    .RepeatForever())
+                .StartAt(DateTimeOffset.Now.
+                    AddMinutes(1)
+                )
+            );
         });
 
         services.AddQuartzHostedService(q => q.WaitForJobsToComplete = true);
