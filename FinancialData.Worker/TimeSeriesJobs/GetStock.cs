@@ -22,7 +22,7 @@ public class GetStock : IJob
         try
         {
             var dataMap = context.MergedJobDataMap;
-            var timeseriesArgsString = dataMap.GetString("timeseriesOptions");
+            var timeseriesArgsString = dataMap.GetString("timeseriesArguments");
             var timeseriesArgs = JsonSerializer.Deserialize<TimeSeriesArguments[]>(timeseriesArgsString);
 
             var stocks = await _timeSeriesService.GetStocksAsync(timeseriesArgs);

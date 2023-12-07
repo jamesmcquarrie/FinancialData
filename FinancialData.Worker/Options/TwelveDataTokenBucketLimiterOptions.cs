@@ -1,6 +1,6 @@
 ﻿namespace FinancialData.Worker.Options;
 
-public class ApplicationTokenBucketLimiterOptions
+public class TwelveDataTokenBucketLimiterOptions
 {
     public int TokenLimit { get; set; }
     public int TokensPerPeriod { get; set; }
