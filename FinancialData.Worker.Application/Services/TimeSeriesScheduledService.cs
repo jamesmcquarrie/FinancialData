@@ -1,14 +1,14 @@
 ﻿using FinancialData.Domain.Entities;
 using FinancialData.Common.Extensions;
 using FinancialData.Domain.Enums;
-using FinancialData.WorkerApplication.Clients;
-using FinancialData.WorkerApplication.Repositories;
+using FinancialData.Worker.Application.Clients;
+using FinancialData.Worker.Application.Repositories;
 using Microsoft.Extensions.Logging;
 using FinancialData.Common.Configuration;
 using FinancialData.Common.Dtos;
-using FinancialData.WorkerApplication.Abstractions;
+using FinancialData.Worker.Application.Abstractions;
 
-namespace FinancialData.WorkerApplication.Services;
+namespace FinancialData.Worker.Application.Services;
 
 public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 {
@@ -92,7 +92,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         _logger.LogInformation("Stocks have been persisted to database");
     }
 
-    public async Task<Dictionary<TimeSeriesArguments, IEnumerable<TimeSeries>>> GetTimeSeriesAsync(IEnumerable<TimeSeriesArguments> timeseriesArgs)
+    public async Task<IDictionary<TimeSeriesArguments, IEnumerable<TimeSeries>>> GetTimeSeriesAsync(IEnumerable<TimeSeriesArguments> timeseriesArgs)
     {
         try
         {

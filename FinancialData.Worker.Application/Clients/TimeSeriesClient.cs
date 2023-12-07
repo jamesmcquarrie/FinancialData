@@ -4,10 +4,10 @@ using FinancialData.Common.Dtos;
 using System.Text.Json;
 using System.Net;
 using System.Net.Http.Json;
-using FinancialData.WorkerApplication.Abstractions;
-using FinancialData.WorkerApplication.StatusMessages;
+using FinancialData.Worker.Application.Abstractions;
+using FinancialData.Worker.Application.StatusMessages;
 
-namespace FinancialData.WorkerApplication.Clients;
+namespace FinancialData.Worker.Application.Clients;
 
 public class TimeSeriesClient : ITimeSeriesClient
 {
@@ -20,7 +20,7 @@ public class TimeSeriesClient : ITimeSeriesClient
 
     public async Task<ClientResult<StockDto>> GetStockAsync(string symbol, Interval interval, int outputSize)
     {
-        var endpoint = TimeSeriesEndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
+        var endpoint = EndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
         var response = await _httpClient.GetAsync(endpoint);
 
         var result = HandleResponse<StockDto>(response);
@@ -39,7 +39,7 @@ public class TimeSeriesClient : ITimeSeriesClient
 
     public async Task<ClientResult<IEnumerable<TimeSeriesDto>>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize)
     {
-        var endpoint = TimeSeriesEndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
+        var endpoint = EndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
         var response = await _httpClient.GetAsync(endpoint);
 
         var result = HandleResponse<IEnumerable<TimeSeriesDto>>(response);

@@ -1,4 +1,4 @@
-﻿using FinancialData.WorkerApplication.Services;
+﻿using FinancialData.Worker.Application.Services;
 using System.Text.Json;
 using Quartz;
 using FinancialData.Common.Configuration;

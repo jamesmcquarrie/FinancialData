@@ -1,7 +1,7 @@
-using FinancialData.WorkerApplication.Clients;
-using FinancialData.WorkerApplication.Handlers;
-using FinancialData.WorkerApplication.Repositories;
-using FinancialData.WorkerApplication.Services;
+using FinancialData.Worker.Application.Clients;
+using FinancialData.Worker.Application.Handlers;
+using FinancialData.Worker.Application.Repositories;
+using FinancialData.Worker.Application.Services;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using FinancialData.Worker.Options;

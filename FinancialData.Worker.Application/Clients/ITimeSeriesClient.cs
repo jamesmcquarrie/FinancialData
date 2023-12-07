@@ -1,8 +1,8 @@
 ﻿using FinancialData.Domain.Enums;
 using FinancialData.Common.Dtos;
-using FinancialData.WorkerApplication.Abstractions;
+using FinancialData.Worker.Application.Abstractions;
 
-namespace FinancialData.WorkerApplication.Clients;
+namespace FinancialData.Worker.Application.Clients;
 
 public interface ITimeSeriesClient
 {

@@ -3,8 +3,8 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FinancialData.Common.Dtos;
 using FinancialData.Domain.Enums;
-using FinancialData.WorkerApplication.Clients;
-using FinancialData.WorkerApplication.StatusMessages;
+using FinancialData.Worker.Application.Clients;
+using FinancialData.Worker.Application.StatusMessages;
 using RichardSzalay.MockHttp;
 
 namespace FinancialData.Worker.UnitTests;

@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using System.Threading.RateLimiting;
 
-namespace FinancialData.WorkerApplication.Handlers;
+namespace FinancialData.Worker.Application.Handlers;
 
 public class DebugRateLimiterHandler : DelegatingHandler
 {

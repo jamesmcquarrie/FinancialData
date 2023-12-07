@@ -1,4 +1,4 @@
-﻿namespace FinancialData.WorkerApplication.StatusMessages;
+﻿namespace FinancialData.Worker.Application.StatusMessages;
 
 public static class TwelveDataStatusMessages
 {

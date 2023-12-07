@@ -1,4 +1,4 @@
-﻿namespace FinancialData.WorkerApplication.Abstractions;
+﻿namespace FinancialData.Worker.Application.Abstractions;
 
 public class ClientResult<T> where T : class
 {

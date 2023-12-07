@@ -2,7 +2,7 @@
 
 namespace FinancialData.Common.Utilities;
 
-public static class TimeSeriesEndpointBuilder
+public static class EndpointBuilder
 {
     public static string BuildTimeSeriesEndpoint(string symbol, Interval interval, int outputSize)
     {
