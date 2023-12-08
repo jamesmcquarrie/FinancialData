@@ -96,15 +96,11 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
     {
         try
         {
-            var tasks = new List<Task<(TimeSeriesArguments Arg, ClientResult<IEnumerable<TimeSeriesDto>> Result)>>();
-
-            foreach (var timeseriesArg in timeseriesArgs)
+            var tasks = timeseriesArgs.Select(async arg =>
             {
-                var task = _timeSeriesClient.GetTimeSeriesAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize)
-                    .ContinueWith(task => (Arg: timeseriesArg, Result: task.Result));
-
-                tasks.Add(task);
-            }
+                var result = await _timeSeriesClient.GetTimeSeriesAsync(arg.Symbol, Interval.FromName(arg.Interval), arg.OutputSize);
+                return (Arg: arg, Result: result);
+            });
 
             var clientResults = await Task.WhenAll(tasks);
 

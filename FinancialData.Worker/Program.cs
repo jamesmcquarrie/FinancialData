@@ -11,7 +11,7 @@ IHost host = Host.CreateDefaultBuilder(args)
     {
         services.AddLogging();
 
-        services.AddTwelveDataTokenBucketRateLimiter();
+        services.AddTwelveDataTokenBucketRateLimiter(hostContext.Configuration);
         services.AddTimeSeriesClient(hostContext.Configuration);
 
         services.AddDbContext<FinancialDataContext>(options =>

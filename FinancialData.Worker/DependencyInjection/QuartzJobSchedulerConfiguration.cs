@@ -41,10 +41,10 @@ public static class QuartzJobSchedulerConfiguration
                 .ForJob(getTimeseriesJobKey)
                 .WithIdentity(getTimeseriesTriggerKey)
                 .WithSimpleSchedule(s => s
-                    .WithIntervalInMinutes(delay)
+                    .WithIntervalInMinutes(5)
                     .RepeatForever())
                 .StartAt(DateTimeOffset.Now.
-                    AddMinutes(delay)
+                    AddMinutes(5)
                 )
             );
         });
