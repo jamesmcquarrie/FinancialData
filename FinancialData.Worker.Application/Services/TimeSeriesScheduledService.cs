@@ -1,10 +1,10 @@
-﻿using FinancialData.Domain.Entities;
-using FinancialData.Common.Extensions;
-using FinancialData.Domain.Enums;
-using FinancialData.Worker.Application.Clients;
+﻿using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.Repositories;
-using Microsoft.Extensions.Logging;
 using FinancialData.Common.Configuration;
+using FinancialData.Common.Extensions;
+using FinancialData.Domain.Entities;
+using FinancialData.Domain.Enums;
+using Microsoft.Extensions.Logging;
 
 namespace FinancialData.Worker.Application.Services;
 
@@ -39,7 +39,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
                     if (!clientResult.IsError)
                     {
-                        _logger.LogInformation("Stock for symbol: {} interval: {} retrieved from API", timeseriesArg.Symbol, timeseriesArg.Interval);
+                        _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} retrieved from API", timeseriesArg.Symbol, timeseriesArg.Interval);
 
                         stock = new Stock
                         {
@@ -57,13 +57,13 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
                     else
                     {
-                        _logger.LogError("Stock for symbol: {} interval: {} not retrieved from API - ERROR MESSAGE: {}", timeseriesArg.Symbol, timeseriesArg.Interval, clientResult.ErrorMessage);
+                        _logger.LogError("Stock for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", timeseriesArg.Symbol, timeseriesArg.Interval, clientResult.ErrorMessage);
                     }
                 }
 
                 else
                 {
-                    _logger.LogInformation("Stock for symbol: {} interval: {} already exists in database", timeseriesArg.Symbol, timeseriesArg.Interval);
+                    _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} already exists in database", timeseriesArg.Symbol, timeseriesArg.Interval);
                 }
             }
 
@@ -72,7 +72,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
         catch (TaskCanceledException ex)
         {
-            _logger.LogError($"{ex.Message} - Please increase the timeout duration.");
+            _logger.LogError("{Message} - Please increase the timeout duration", ex.Message);
             throw;
         }
 
@@ -108,7 +108,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
             {
                 if (!result.Result.IsError)
                 {
-                    _logger.LogInformation("Timeseries for symbol: {} interval: {} retrieved from API", result.Arg.Symbol, result.Arg.Interval);
+                    _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} retrieved from API", result.Arg.Symbol, result.Arg.Interval);
 
                     var timeseriesExists = await _timeSeriesRepository.GetTimeSeriesAsync(result.Arg.Symbol, Interval.FromName(result.Arg.Interval));
 
@@ -127,7 +127,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
                 else
                 {
-                    _logger.LogError("Timeseries for symbol: {} interval: {} not retrieved from API - ERROR MESSAGE: {}", result.Arg.Symbol, result.Arg.Interval, result.Result.ErrorMessage);
+                    _logger.LogError("Timeseries for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", result.Arg.Symbol, result.Arg.Interval, result.Result.ErrorMessage);
                 }
             }
 
@@ -151,6 +151,6 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
     {
         await _timeSeriesRepository.AddTimeSeriesToStockAsync(symbol, interval, timeseries);
 
-        _logger.LogInformation("Timeseries for symbol: {} interval: {} has been persisted to database", symbol, interval.Name);
+        _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} has been persisted to database", symbol, interval.Name);
     }
 }

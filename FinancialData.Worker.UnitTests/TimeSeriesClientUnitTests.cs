@@ -1,10 +1,10 @@
-﻿using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using FinancialData.Common.Dtos;
+﻿using FinancialData.Common.Dtos;
 using FinancialData.Domain.Enums;
 using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.StatusMessages;
+using System.Net;
+using System.Net.Http.Json;
+using System.Text.Json;
 using RichardSzalay.MockHttp;
 
 namespace FinancialData.Worker.UnitTests;

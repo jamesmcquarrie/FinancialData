@@ -1,9 +1,9 @@
 ﻿using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Options;
-using Microsoft.Extensions.Options;
-using Polly;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
+using Microsoft.Extensions.Options;
+using Polly;
 
 namespace FinancialData.Worker.DependencyInjection;
 

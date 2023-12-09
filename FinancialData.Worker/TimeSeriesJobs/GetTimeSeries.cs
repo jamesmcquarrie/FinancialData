@@ -1,8 +1,8 @@
 ﻿using FinancialData.Worker.Application.Services;
+using FinancialData.Common.Configuration;
 using FinancialData.Domain.Enums;
 using System.Text.Json;
 using Quartz;
-using FinancialData.Common.Configuration;
 
 namespace FinancialData.Worker.TimeSeriesJobs;
 

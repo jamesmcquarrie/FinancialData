@@ -1,11 +1,11 @@
-﻿using FinancialData.Domain.Enums;
+﻿using FinancialData.Worker.Application.Abstractions;
+using FinancialData.Worker.Application.StatusMessages;
+using FinancialData.Domain.Enums;
 using FinancialData.Common.Utilities;
 using FinancialData.Common.Dtos;
-using System.Text.Json;
 using System.Net;
 using System.Net.Http.Json;
-using FinancialData.Worker.Application.Abstractions;
-using FinancialData.Worker.Application.StatusMessages;
+using System.Text.Json;
 
 namespace FinancialData.Worker.Application.Clients;
 

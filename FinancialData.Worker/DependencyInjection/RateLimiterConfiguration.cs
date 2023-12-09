@@ -1,5 +1,4 @@
 ﻿using FinancialData.Worker.Options;
-using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
 
 namespace FinancialData.Worker.DependencyInjection;

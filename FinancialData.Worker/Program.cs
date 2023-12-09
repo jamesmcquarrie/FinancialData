@@ -1,16 +1,15 @@
 using FinancialData.Worker.Application.Repositories;
 using FinancialData.Worker.Application.Services;
+using FinancialData.Worker.DependencyInjection;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
 using Quartz;
-using FinancialData.Worker.DependencyInjection;
+using Serilog;
 
 IHost host = Host.CreateDefaultBuilder(args)
     .ConfigureServices((hostContext, services) =>
     {
-        services.AddLogging();
-
         services.AddTwelveDataTokenBucketRateLimiter(hostContext.Configuration);
         services.AddTimeSeriesClient(hostContext.Configuration);
 
@@ -21,6 +20,10 @@ IHost host = Host.CreateDefaultBuilder(args)
         services.AddScoped<ITimeSeriesScheduledRepository, TimeSeriesScheduledRepository>();
 
         services.AddTimeSeriesQuartzJobs(hostContext.Configuration);
+    })
+    .UseSerilog((hostContext, loggerConfiguration) =>
+    {
+        loggerConfiguration.ReadFrom.Configuration(hostContext.Configuration);
     })
     .Build();
 
