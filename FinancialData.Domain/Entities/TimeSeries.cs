@@ -3,11 +3,12 @@
 public class TimeSeries
 {
     public int Id { get; set; }
-    public required string Datetime { get; set; }
-    public required string High { get; set; }
-    public required string Low { get; set; }
-    public required string Open { get; set; }
-    public required string Close { get; set; }
-    public required string Volume { get; set; }
+    public DateTime Datetime { get; set; }
+    public double High { get; set; }
+    public double Low { get; set; }
+    public double Open { get; set; }
+    public double Close { get; set; }
+    public double Volume { get; set; }
+    public int StockId { get; set; }
     public Stock? Stock { get; set; }
 }

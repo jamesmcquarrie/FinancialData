@@ -10,5 +10,6 @@ public class Metadata
     public required string ExchangeTimezone { get; set; }
     public required string MicCode { get; set; }
     public required string Interval { get; set; }
-    public Stock? Stock { get; set; } = null!;
+    public int StockId { get; set; }
+    public Stock? Stock { get; set; }
 }

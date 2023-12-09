@@ -16,44 +16,34 @@ public class FinancialDataContext : DbContext
         modelBuilder.Entity<Stock>()
             .HasOne(s => s.Metadata)
             .WithOne(m => m.Stock)
-            .HasForeignKey<Metadata>();
+            .HasForeignKey<Metadata>(m => m.StockId)
+            .IsRequired();
 
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.Symbol)
-        //    .HasMaxLength(10);
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.Type)
-        //    .HasMaxLength(30);
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.Currency)
-        //    .HasMaxLength(10);
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.Exchange)
-        //    .HasMaxLength(20);
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.ExchangeTimeZone)
-        //    .HasMaxLength(30);
-        //modelBuilder.Entity<MetaData>()
-        //    .Property(m => m.Interval)
-        //    .HasMaxLength(10);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.Symbol)
+            .HasMaxLength(15);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.Type)
+            .HasMaxLength(30);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.Currency)
+            .HasMaxLength(15);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.Exchange)
+            .HasMaxLength(20);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.ExchangeTimezone)
+            .HasMaxLength(30);
+        modelBuilder.Entity<Metadata>()
+            .Property(m => m.Interval)
+            .HasMaxLength(10);
 
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.DateTime)
-        //    .HasMaxLength(15);
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.High)
-        //    .HasMaxLength(15);
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.Low)
-        //    .HasMaxLength(15);
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.Open)
-        //    .HasMaxLength(15);
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.Close)
-        //    .HasMaxLength(15);
-        //modelBuilder.Entity<TimeSeries>()
-        //    .Property(t => t.Volume)
-        //    .HasMaxLength(15);
+        modelBuilder.Entity<Metadata>()
+            .HasIndex(m => new { m.Symbol, m.Interval })
+            .IsUnique();
+
+        modelBuilder.Entity<TimeSeries>()
+            .HasIndex(ts => new { ts.StockId, ts.Datetime })
+            .IsUnique();
     }
 }

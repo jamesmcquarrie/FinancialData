@@ -5,8 +5,6 @@ using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.Repositories;
 using Microsoft.Extensions.Logging;
 using FinancialData.Common.Configuration;
-using FinancialData.Common.Dtos;
-using FinancialData.Worker.Application.Abstractions;
 
 namespace FinancialData.Worker.Application.Services;
 
@@ -114,10 +112,10 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
                     var timeseriesExists = await _timeSeriesRepository.GetTimeSeriesAsync(result.Arg.Symbol, Interval.FromName(result.Arg.Interval));
 
-                    foreach (var timeseriesItem in result.Result.Payload)
+                    foreach (var timeseriesItem in result.Result.Payload!)
                     {
                         var exists = timeseriesExists.Any(ts =>
-                            ts.Datetime == timeseriesItem.Datetime);
+                            ts.Datetime == DateTime.Parse(timeseriesItem.Datetime));
 
                         if (!exists)
                         {

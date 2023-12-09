@@ -1,5 +1,6 @@
 ﻿using FinancialData.Domain.Entities;
 using FinancialData.Common.Dtos;
+using System.Globalization;
 
 namespace FinancialData.Common.Extensions;
 
@@ -23,12 +24,12 @@ public static class TimeSeriesToDTOExtensions
     {
         return new TimeSeriesDto
         {
-            Datetime = timeSeries.Datetime,
-            High = timeSeries.High,
-            Low = timeSeries.Low,
-            Open = timeSeries.Open,
-            Close = timeSeries.Close,
-            Volume = timeSeries.Volume,
+            Datetime = timeSeries.Datetime.ToShortDateString(),
+            High = timeSeries.High.ToString(CultureInfo.InvariantCulture),
+            Low = timeSeries.Low.ToString(CultureInfo.InvariantCulture),
+            Open = timeSeries.Open.ToString(CultureInfo.InvariantCulture),
+            Close = timeSeries.Close.ToString(CultureInfo.InvariantCulture),
+            Volume = timeSeries.Volume.ToString(CultureInfo.InvariantCulture),
         };
     }
 }
