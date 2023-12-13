@@ -4,7 +4,6 @@ using FinancialData.Worker.DependencyInjection;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
-using Quartz;
 using Serilog;
 
 IHost host = Host.CreateDefaultBuilder(args)
