@@ -1,6 +1,6 @@
-﻿using FinancialData.Worker.Application.Abstractions;
-using FinancialData.Worker.Application.StatusMessages;
+﻿using FinancialData.Worker.Application.StatusMessages;
 using FinancialData.Domain.Enums;
+using FinancialData.Common.Abstractions;
 using FinancialData.Common.Utilities;
 using FinancialData.Common.Dtos;
 using System.Net;
@@ -18,7 +18,7 @@ public class TimeSeriesClient : ITimeSeriesClient
         _httpClient = httpClient;
     }
 
-    public async Task<ClientResult<StockDto>> GetStockAsync(string symbol, Interval interval, int outputSize)
+    public async Task<ServiceResult<StockDto>> GetStockAsync(string symbol, Interval interval, int outputSize)
     {
         var endpoint = EndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
         var response = await _httpClient.GetAsync(endpoint);
@@ -37,7 +37,7 @@ public class TimeSeriesClient : ITimeSeriesClient
         return result;
     }
 
-    public async Task<ClientResult<IEnumerable<TimeSeriesDto>>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize)
+    public async Task<ServiceResult<IEnumerable<TimeSeriesDto>>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize)
     {
         var endpoint = EndpointBuilder.BuildTimeSeriesEndpoint(symbol, interval, outputSize);
         var response = await _httpClient.GetAsync(endpoint);
@@ -56,31 +56,31 @@ public class TimeSeriesClient : ITimeSeriesClient
         return result;
     }
 
-    private ClientResult<T> HandleResponse<T>(HttpResponseMessage response) where T : class
+    private ServiceResult<T> HandleResponse<T>(HttpResponseMessage response) where T : class
     {
         var result = response.StatusCode switch
         {
-            HttpStatusCode.TooManyRequests => new ClientResult<T>
+            HttpStatusCode.TooManyRequests => new ServiceResult<T>
             {
                 IsError = true,
                 ErrorMessage = TwelveDataStatusMessages.TooManyRequestsMessage
             },
-            HttpStatusCode.Unauthorized => new ClientResult<T>
+            HttpStatusCode.Unauthorized => new ServiceResult<T>
             {
                 IsError = true,
                 ErrorMessage = TwelveDataStatusMessages.UnauthorisedMessage
             },
-            HttpStatusCode.NotFound => new ClientResult<T>
+            HttpStatusCode.NotFound => new ServiceResult<T>
             {
                 IsError = true,
                 ErrorMessage = TwelveDataStatusMessages.NotFoundMessage
             },
-            HttpStatusCode.BadRequest => new ClientResult<T>
+            HttpStatusCode.BadRequest => new ServiceResult<T>
             {
                 IsError = true,
                 ErrorMessage = TwelveDataStatusMessages.BadRequestMessage
             },
-            _ => new ClientResult<T>()
+            _ => new ServiceResult<T>()
         };
 
         return result;

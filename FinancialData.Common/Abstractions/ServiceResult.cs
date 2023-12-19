@@ -1,6 +1,6 @@
-﻿namespace FinancialData.Worker.Application.Abstractions;
+﻿namespace FinancialData.Common.Abstractions;
 
-public class ClientResult<T> where T : class
+public class ServiceResult<T> where T : class
 {
     public bool IsError { get; set; }
     public string? ErrorMessage { get; set; }

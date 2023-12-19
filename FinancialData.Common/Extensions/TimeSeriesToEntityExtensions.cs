@@ -24,7 +24,7 @@ public static class TimeSeriesToEntityExtensions
     {
         return new TimeSeries
         {
-            Datetime = DateTime.Parse(timeSeriesDto.Datetime, CultureInfo.InvariantCulture),
+            Datetime = Convert.ToDateTime(timeSeriesDto.Datetime, CultureInfo.InvariantCulture),
             High = Convert.ToDouble(timeSeriesDto.High, CultureInfo.InvariantCulture),
             Low = Convert.ToDouble(timeSeriesDto.Low, CultureInfo.InvariantCulture),
             Open = Convert.ToDouble(timeSeriesDto.Open, CultureInfo.InvariantCulture),

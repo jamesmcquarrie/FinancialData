@@ -76,6 +76,12 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
             throw;
         }
 
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex.Message);
+            throw;
+        }
+
         catch (Exception ex) 
         {
             _logger.LogError(ex, "UNEXPECTED ERROR");
@@ -110,18 +116,21 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
                 {
                     _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} retrieved from API", result.Arg.Symbol, result.Arg.Interval);
 
-                    var timeseriesExists = await _timeSeriesRepository.GetTimeSeriesAsync(result.Arg.Symbol, Interval.FromName(result.Arg.Interval));
+                    var existingTimeseries = await _timeSeriesRepository.GetTimeSeriesAsync(result.Arg.Symbol, Interval.FromName(result.Arg.Interval));
+                    
+                    var newTimeseries = result.Result.Payload!
+                        .Select(newTs => newTs.ToEntity())
+                        .Where(newTs => !existingTimeseries
+                            .Any(oldTs => oldTs.Datetime == newTs.Datetime));
 
-                    foreach (var timeseriesItem in result.Result.Payload!)
+                    if (newTimeseries.Any())
                     {
-                        var exists = timeseriesExists.Any(ts =>
-                            ts.Datetime == DateTime.Parse(timeseriesItem.Datetime));
+                        timeseriesDictionary[result.Arg] = newTimeseries;
+                    }
 
-                        if (!exists)
-                        {
-                            timeseriesDictionary[result.Arg] = result.Result.Payload!
-                                .Select(ts => ts.ToEntity());
-                        }
+                    else
+                    {
+                        _logger.LogInformation("No new Timeseries data for symbol: {Symbol} interval: {Interval}", result.Arg.Symbol, result.Arg.Interval);
                     }
                 }
 
@@ -137,6 +146,12 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         catch (TaskCanceledException ex)
         {
             _logger.LogError($"{ex.Message} - Please increase the timeout duration.");
+            throw;
+        }
+
+        catch (HttpRequestException ex)
+        {
+            _logger.LogError(ex.Message);
             throw;
         }
 

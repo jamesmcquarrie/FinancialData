@@ -18,7 +18,7 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
     {
         var stock = await _context.Stocks
             .Include(s => s.Metadata)
-            .FirstOrDefaultAsync(s => 
+            .SingleOrDefaultAsync(s => 
                 s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
         return stock;
@@ -36,7 +36,7 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
         var stock = await _context.Stocks
            .Include(s => s.Metadata)
            .Include(s => s.TimeSeries)
-           .FirstOrDefaultAsync(s =>
+           .SingleAsync(s =>
                s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
         return stock.TimeSeries;
@@ -46,7 +46,7 @@ public class TimeSeriesScheduledRepository : ITimeSeriesScheduledRepository
     {
         var stock = await _context.Stocks
             .Include(s => s.Metadata)
-            .FirstOrDefaultAsync(s =>
+            .SingleOrDefaultAsync(s =>
                 s.Metadata.Symbol == symbol && s.Metadata.Interval == interval.Name);
 
         foreach (var timeSeriesItem in timeSeries) 
