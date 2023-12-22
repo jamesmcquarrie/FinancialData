@@ -1,6 +1,5 @@
 ﻿using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.Repositories;
-using FinancialData.Common.Configuration;
 using FinancialData.Common.Extensions;
 using FinancialData.Domain.Entities;
 using FinancialData.Domain.Enums;
@@ -23,51 +22,43 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         _timeSeriesRepository = timeSeriesRepository;
     }
 
-    public async Task<IEnumerable<Stock>> GetStocksAsync(IEnumerable<TimeSeriesArguments> timeseriesArgs)
+    public async Task<Stock> GetStockAsync(string symbol, Interval interval, int outputSize)
     {
-        List<Stock> stocks = new List<Stock>();
-
         try
         {
-            foreach (var timeseriesArg in timeseriesArgs) 
+            var stock = await _timeSeriesRepository.GetStockAsync(symbol, interval);
+
+            if (stock is not null)
             {
-                var stock = await _timeSeriesRepository.GetStockAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval));
+                _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} already exists in database", symbol, interval.Name);
 
-                if (stock is null)
-                {
-                    var clientResult = await _timeSeriesClient.GetStockAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize);
-
-                    if (!clientResult.IsError)
-                    {
-                        _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} retrieved from API", timeseriesArg.Symbol, timeseriesArg.Interval);
-
-                        stock = new Stock
-                        {
-                            Metadata = clientResult.Payload!
-                                .Metadata
-                                .ToEntity(),
-                            TimeSeries = clientResult.Payload!
-                                .TimeSeries
-                                .Select(ts => ts.ToEntity())
-                                    .ToList()
-                        };
-
-                        stocks.Add(stock);
-                    }
-
-                    else
-                    {
-                        _logger.LogError("Stock for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", timeseriesArg.Symbol, timeseriesArg.Interval, clientResult.ErrorMessage);
-                    }
-                }
-
-                else
-                {
-                    _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} already exists in database", timeseriesArg.Symbol, timeseriesArg.Interval);
-                }
+                return null;
             }
 
-            return stocks;
+            var clientResult = await _timeSeriesClient.GetStockAsync(symbol, interval, outputSize);
+
+            if (!clientResult.IsError)
+            {
+                _logger.LogInformation("Stock for symbol: {Symbol} interval: {Interval} retrieved from API", symbol, interval);
+
+                stock = new Stock
+                {
+                    Metadata = clientResult.Payload!
+                        .Metadata
+                        .ToEntity(),
+                    TimeSeries = clientResult.Payload!
+                        .TimeSeries
+                        .Select(ts => ts.ToEntity())
+                            .ToList()
+                };
+            }
+
+            else
+            {
+                _logger.LogError("Stock for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", symbol, interval.Name, clientResult.ErrorMessage);
+            }
+
+            return stock;
         }
 
         catch (TaskCanceledException ex)
@@ -96,51 +87,48 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         _logger.LogInformation("Stocks have been persisted to database");
     }
 
-    public async Task<IDictionary<TimeSeriesArguments, IEnumerable<TimeSeries>>> GetTimeSeriesAsync(IEnumerable<TimeSeriesArguments> timeseriesArgs)
+    public async Task<IEnumerable<TimeSeries>> GetTimeSeriesAsync(string symbol, Interval interval, int outputSize)
     {
         try
         {
-            var tasks = timeseriesArgs.Select(async arg =>
+            var result = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
+
+            var newTimeseries = Array.Empty<TimeSeries>();
+
+            if (!result.IsError)
             {
-                var result = await _timeSeriesClient.GetTimeSeriesAsync(arg.Symbol, Interval.FromName(arg.Interval), arg.OutputSize);
-                return (Arg: arg, Result: result);
-            });
+                _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} retrieved from API", symbol, interval.Name);
 
-            var clientResults = await Task.WhenAll(tasks);
+                var existingTimeseries = await _timeSeriesRepository.GetTimeSeriesAsync(symbol, interval);
 
-            var timeseriesDictionary = new Dictionary<TimeSeriesArguments, IEnumerable<TimeSeries>>();
+                newTimeseries = result.Payload!
+                    .Select(newTs => newTs.ToEntity())
+                    .Where(newTs => !existingTimeseries
+                        .Any(oldTs => oldTs.Datetime == newTs.Datetime))
+                    .ToArray();
 
-            foreach (var result in clientResults)
-            {
-                if (!result.Result.IsError)
+                if (newTimeseries.Any())
                 {
-                    _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} retrieved from API", result.Arg.Symbol, result.Arg.Interval);
+                    var stockId = existingTimeseries.First().StockId;
 
-                    var existingTimeseries = await _timeSeriesRepository.GetTimeSeriesAsync(result.Arg.Symbol, Interval.FromName(result.Arg.Interval));
-                    
-                    var newTimeseries = result.Result.Payload!
-                        .Select(newTs => newTs.ToEntity())
-                        .Where(newTs => !existingTimeseries
-                            .Any(oldTs => oldTs.Datetime == newTs.Datetime));
-
-                    if (newTimeseries.Any())
+                    foreach (var timeSeries in newTimeseries)
                     {
-                        timeseriesDictionary[result.Arg] = newTimeseries;
-                    }
-
-                    else
-                    {
-                        _logger.LogInformation("No new Timeseries data for symbol: {Symbol} interval: {Interval}", result.Arg.Symbol, result.Arg.Interval);
+                        timeSeries.StockId = stockId;
                     }
                 }
 
                 else
                 {
-                    _logger.LogError("Timeseries for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", result.Arg.Symbol, result.Arg.Interval, result.Result.ErrorMessage);
+                    _logger.LogInformation("No new Timeseries data for symbol: {Symbol} interval: {Interval}", symbol, interval.Name);
                 }
             }
 
-            return timeseriesDictionary;
+            else
+            {
+                _logger.LogError("Timeseries for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", symbol, interval.Name, result.ErrorMessage);
+            }
+
+            return newTimeseries;
         }
 
         catch (TaskCanceledException ex)
@@ -162,10 +150,10 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
         }
     }
 
-    public async Task AddTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeseries)
+    public async Task CreateTimeSeriesAsync(IEnumerable<TimeSeries> timeseries)
     {
-        await _timeSeriesRepository.AddTimeSeriesToStockAsync(symbol, interval, timeseries);
+        await _timeSeriesRepository.CreateTimeSeriesAsync(timeseries);
 
-        _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} has been persisted to database", symbol, interval.Name);
+        _logger.LogInformation("Timeseries have been persisted to database");
     }
 }

@@ -8,5 +8,5 @@ public interface ITimeSeriesScheduledRepository
     Task<Stock> GetStockAsync(string symbol, Interval interval);
     Task CreateStocksAsync(IEnumerable<Stock> stocks);
     Task<IEnumerable<TimeSeries>> GetTimeSeriesAsync(string symbol, Interval interval);
-    Task AddTimeSeriesToStockAsync(string symbol, Interval interval, IEnumerable<TimeSeries> timeSeries);
+    Task CreateTimeSeriesAsync(IEnumerable<TimeSeries> timeSeries);
 }

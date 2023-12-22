@@ -1,5 +1,7 @@
 ﻿using FinancialData.Worker.Application.Services;
 using FinancialData.Common.Configuration;
+using FinancialData.Domain.Enums;
+using FinancialData.Domain.Entities;
 using System.Text.Json;
 using Quartz;
 
@@ -24,8 +26,13 @@ public class GetStock : IJob
             var dataMap = context.MergedJobDataMap;
             var timeseriesArgsString = dataMap.GetString("timeseriesArguments");
             var timeseriesArgs = JsonSerializer.Deserialize<TimeSeriesArguments[]>(timeseriesArgsString);
+            var stocks = new List<Stock>();
 
-            var stocks = await _timeSeriesService.GetStocksAsync(timeseriesArgs);
+            foreach (var arg in timeseriesArgs)
+            {
+                var stock = await _timeSeriesService.GetStockAsync(arg.Symbol, Interval.FromName(arg.Interval), arg.OutputSize);
+                if (stock is not null) stocks.Add(stock);
+            }
 
             if (stocks.Any())
             {

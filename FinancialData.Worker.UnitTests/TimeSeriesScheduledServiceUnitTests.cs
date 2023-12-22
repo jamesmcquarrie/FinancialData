@@ -18,7 +18,7 @@ namespace FinancialData.Worker.UnitTests;
 public class TimeSeriesScheduledServiceUnitTests
 {
     [Fact]
-    public async Task GetStocksAsync_RetrievedSuccessfullyFromApi()
+    public async Task GetStockAsync_RetrievedSuccessfullyFromApi()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -56,10 +56,10 @@ public class TimeSeriesScheduledServiceUnitTests
         };
 
         //Act
-        var result = await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        var result = await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
-        result.Should().BeEquivalentTo(new Stock[] { stock });
+        result.Should().BeEquivalentTo(stock);
     }
 
     [Theory]
@@ -67,7 +67,7 @@ public class TimeSeriesScheduledServiceUnitTests
     [InlineData(TwelveDataStatusMessages.UnauthorisedMessage)]
     [InlineData(TwelveDataStatusMessages.NotFoundMessage)]
     [InlineData(TwelveDataStatusMessages.BadRequestMessage)]
-    public async Task GetStocksAsync_RetrievedUnSuccessfullyFromApi(string errorMessage)
+    public async Task GetStockAsync_RetrievedUnSuccessfullyFromApi(string errorMessage)
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -93,14 +93,14 @@ public class TimeSeriesScheduledServiceUnitTests
             .Returns(Task.FromResult(serviceResult));
 
         //Act
-        var result = await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        var result = await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
-        result.Should().BeEmpty();
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetStocksAsync_RetrievedSuccessfullyFromRepository()
+    public async Task GetStockAsync_RetrievedSuccessfullyFromRepository()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -126,14 +126,14 @@ public class TimeSeriesScheduledServiceUnitTests
            .Returns(Task.FromResult(stock));
 
         //Act
-        var result = await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        var result = await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
-        result.Should().BeEmpty();
+        result.Should().BeNull();
     }
 
     [Fact]
-    public async Task GetStocksAsync_ShouldThrowTaskCancelledException()
+    public async Task GetStockAsync_ShouldThrowTaskCancelledException()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -150,14 +150,14 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<TaskCanceledException>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<TaskCanceledException>();
     }
 
     [Fact]
-    public async Task GetStocksAsync_ShouldThrowHttpRequestException()
+    public async Task GetStockAsync_ShouldThrowHttpRequestException()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -174,14 +174,14 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<HttpRequestException>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<HttpRequestException>();
     }
 
     [Fact]
-    public async Task GetStocksAsync_ShouldThrowGeneralException()
+    public async Task GetStockAsync_ShouldThrowGeneralException()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -198,7 +198,7 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<Exception>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<Exception>();
@@ -216,21 +216,13 @@ public class TimeSeriesScheduledServiceUnitTests
         var fixture = new Fixture();
 
         var timeseriesArgs = fixture.Customize(new TimeSeriesArgumentsCustomization())
-                .Create<TimeSeriesArguments>();            
+                .Create<TimeSeriesArguments>();
 
         var serviceResult = new ServiceResult<IEnumerable<TimeSeriesDto>>
         {
             Payload = fixture.Customize(new TimeSeriesDtoCustomization())
                     .CreateMany<TimeSeriesDto>(3)
                     .ToList()
-        };
-
-        var timeseriesDictionary = new Dictionary<TimeSeriesArguments, IEnumerable<TimeSeries>>
-        {
-            {
-                timeseriesArgs,
-                serviceResult.Payload.Select(ts => ts.ToEntity())
-            }
         };
 
         var existingTimeseries = serviceResult.Payload.Take(1).Select(ts => ts.ToEntity());
@@ -242,11 +234,11 @@ public class TimeSeriesScheduledServiceUnitTests
             .Returns(Task.FromResult(serviceResult));
 
         //Act
-        var result = await timeseriesScheduledService.GetTimeSeriesAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        var result = await timeseriesScheduledService.GetTimeSeriesAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
-        result[timeseriesArgs].Should().HaveCount(2);
-        result[timeseriesArgs].Should().BeEquivalentTo(timeseriesDictionary[timeseriesArgs].Skip(1));
+        result.Should().HaveCount(2);
+        result.Should().BeEquivalentTo(serviceResult.Payload.Skip(1).Select(ts => ts.ToEntity()));
     }
 
     [Theory]
@@ -267,17 +259,17 @@ public class TimeSeriesScheduledServiceUnitTests
         var timeseriesArgs = fixture.Customize(new TimeSeriesArgumentsCustomization())
                 .Create<TimeSeriesArguments>();
 
-        var serviceResult = new ServiceResult<StockDto>
+        var serviceResult = new ServiceResult<IEnumerable<TimeSeriesDto>>
         {
             IsError = true,
             ErrorMessage = errorMessage
         };
 
-        client.GetStockAsync(Arg.Any<string>(), Arg.Any<Interval>(), Arg.Any<int>())
+        client.GetTimeSeriesAsync(Arg.Any<string>(), Arg.Any<Interval>(), Arg.Any<int>())
             .Returns(Task.FromResult(serviceResult));
 
         //Act
-        var result = await timeseriesScheduledService.GetStocksAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        var result = await timeseriesScheduledService.GetTimeSeriesAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         result.Should().BeEmpty();
@@ -301,7 +293,7 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<TaskCanceledException>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<TaskCanceledException>();
@@ -325,7 +317,7 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<HttpRequestException>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<HttpRequestException>();
@@ -349,7 +341,7 @@ public class TimeSeriesScheduledServiceUnitTests
             .ThrowsAsync<Exception>();
 
         //Act
-        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(new TimeSeriesArguments[] { timeseriesArgs });
+        Func<Task> act = async () => await timeseriesScheduledService.GetTimeSeriesAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseriesArgs.OutputSize);
 
         //Assert
         await act.Should().ThrowAsync<Exception>();
@@ -388,7 +380,7 @@ public class TimeSeriesScheduledServiceUnitTests
     }
 
     [Fact]
-    public async Task AddTimeSeriesToStockAsync_ShouldReturnTask()
+    public async Task CreateTimeSeriesAsync_ShouldReturnTask()
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
@@ -398,16 +390,13 @@ public class TimeSeriesScheduledServiceUnitTests
 
         var fixture = new Fixture();
 
-        var timeseriesArgs = fixture.Customize(new TimeSeriesArgumentsCustomization())
-                .Create<TimeSeriesArguments>();
-
         var timeseries = fixture.Customize(new TimeSeriesCustomization())
             .CreateMany<TimeSeries>();
 
         //Act
-        await timeseriesScheduledService.AddTimeSeriesToStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseries);
+        await timeseriesScheduledService.CreateTimeSeriesAsync(timeseries);
 
         //Assert
-        await repository.Received().AddTimeSeriesToStockAsync(timeseriesArgs.Symbol, Interval.FromName(timeseriesArgs.Interval), timeseries);
+        await repository.Received().CreateTimeSeriesAsync(timeseries);
     }
 }
