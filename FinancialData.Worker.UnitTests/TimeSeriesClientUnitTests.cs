@@ -2,8 +2,8 @@
 using FinancialData.Domain.Enums;
 using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.StatusMessages;
-using FinancialData.Worker.UnitTests.Customizations;
 using FinancialData.Common.Configuration;
+using FinancialData.Common.Customizations;
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
