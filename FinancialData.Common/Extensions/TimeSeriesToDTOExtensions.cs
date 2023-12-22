@@ -24,7 +24,7 @@ public static class TimeSeriesToDTOExtensions
     {
         return new TimeSeriesDto
         {
-            Datetime = timeSeries.Datetime.ToShortDateString(),
+            Datetime = timeSeries.Datetime.ToString("G", CultureInfo.InvariantCulture),
             High = timeSeries.High.ToString(CultureInfo.InvariantCulture),
             Low = timeSeries.Low.ToString(CultureInfo.InvariantCulture),
             Open = timeSeries.Open.ToString(CultureInfo.InvariantCulture),
