@@ -4,8 +4,14 @@ using FinancialData.Domain.Repositories;
 using FinancialData.Infrastructure;
 using FinancialData.Infrastructure.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Host.UseSerilog((hostContext, LoggerConfiguration) =>
+{
+    LoggerConfiguration.ReadFrom.Configuration(hostContext.Configuration);
+});
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
