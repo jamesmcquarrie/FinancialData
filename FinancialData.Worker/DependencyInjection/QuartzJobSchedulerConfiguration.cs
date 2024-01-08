@@ -1,53 +1,48 @@
-﻿using FinancialData.Worker.TimeSeriesJobs;
+﻿using FinancialData.Worker.Options;
+using FinancialData.Worker.TimeSeriesJobs;
+using Microsoft.Extensions.Options;
 using Quartz;
 
 namespace FinancialData.Worker.DependencyInjection;
 
 public static class QuartzJobSchedulerConfiguration
 {
-    public static IServiceCollection AddTimeSeriesQuartzJobs(this IServiceCollection services, IConfiguration configuration)
-    {
-        services.AddQuartz(configurator =>
-        {
-            var path = Path.Combine(configuration["ArgumentsPath"]!, "timeseriesArguments.json");
-            var timeseriesArgumentsString = File.ReadAllText(path);
-            var delay = configuration
-                .GetRequiredSection("DelayMinutes")
-                .Get<int>();
+    public static IServiceCollection AddTimeSeriesQuartzJobs(this IServiceCollection services)
+    {        
+        services.AddOptions<QuartzOptions>()
+            .Configure<IOptions<TimeSeriesArgumentsOptions>>((configurator, timeSeriesArgumentsOptions) =>
+            {
+                var getStockJobKey = new JobKey($"{nameof(GetStock)}-job");
+                var getStockTriggerKey = new TriggerKey($"{nameof(GetStock)}-trigger");
 
-            var getStockJobKey = new JobKey($"{nameof(GetStock)}-job");
-            var getStockTriggerKey = new TriggerKey($"{nameof(GetStock)}-trigger");
+                configurator.AddJob<GetStock>(options => options
+                    .WithIdentity(getStockJobKey)
+                );
 
-            configurator.AddJob<GetStock>(options => options
-                .WithIdentity(getStockJobKey)
-                .UsingJobData("timeseriesArguments", timeseriesArgumentsString)
-            );
+                configurator.AddTrigger(options => options
+                    .ForJob(getStockJobKey)
+                    .WithIdentity(getStockTriggerKey)
+                    .StartNow()
+                );
 
-            configurator.AddTrigger(options => options
-                .ForJob(getStockJobKey)
-                .WithIdentity(getStockTriggerKey)
-                .StartNow()
-            );
+                var getTimeseriesJobKey = new JobKey($"{nameof(GetTimeSeries)}-job");
+                var getTimeseriesTriggerKey = new TriggerKey($"{nameof(GetTimeSeries)}-trigger");
 
-            var getTimeseriesJobKey = new JobKey($"{nameof(GetTimeSeries)}-job");
-            var getTimeseriesTriggerKey = new TriggerKey($"{nameof(GetTimeSeries)}-trigger");
+                configurator.AddJob<GetTimeSeries>(options => options
+                    .WithIdentity(getTimeseriesJobKey)
+                );
 
-            configurator.AddJob<GetTimeSeries>(options => options
-                .WithIdentity(getTimeseriesJobKey)
-                .UsingJobData("timeseriesArguments", timeseriesArgumentsString)
-            );
-
-            configurator.AddTrigger(options => options
-                .ForJob(getTimeseriesJobKey)
-                .WithIdentity(getTimeseriesTriggerKey)
-                .WithSimpleSchedule(s => s
-                    .WithIntervalInMinutes(delay)
-                    .RepeatForever())
-                .StartAt(DateTimeOffset.Now.
-                    AddMinutes(delay)
-                )
-            );
-        });
+                configurator.AddTrigger(options => options
+                    .ForJob(getTimeseriesJobKey)
+                    .WithIdentity(getTimeseriesTriggerKey)
+                    .WithSimpleSchedule(s => s
+                        .WithIntervalInMinutes(timeSeriesArgumentsOptions.Value.DelayMinutes)
+                        .RepeatForever())
+                    .StartAt(DateTimeOffset.Now.
+                        AddMinutes(timeSeriesArgumentsOptions.Value.DelayMinutes)
+                    )
+                );
+            });
 
         services.AddQuartzHostedService(options => options.WaitForJobsToComplete = true);
 

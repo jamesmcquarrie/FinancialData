@@ -9,16 +9,14 @@ namespace FinancialData.Worker.DependencyInjection;
 
 public static class HttpClientConfiguration
 {
-    public static IServiceCollection AddTimeSeriesClient(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddTwelveDataTimeSeriesClient(this IServiceCollection services)
     {
-        services.ConfigureOptions<TimeSeriesClientOptionsSetup>();
-
-        services.AddHttpClient<ITimeSeriesClient, TimeSeriesClient>((serviceProvider, client) =>
+        services.AddHttpClient<ITimeSeriesClient, TwelveDataTimeSeriesClient>((serviceProvider, client) =>
         {
-            var timeSeriesClientOptions = serviceProvider.GetRequiredService<IOptions<TimeSeriesClientOptions>>().Value;
+            var timeSeriesClientOptions = serviceProvider.GetRequiredService<IOptions<TwelveDataClientOptions>>().Value;
 
             client.BaseAddress = new Uri(timeSeriesClientOptions.BaseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", configuration["ApiKey"]);
+            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("apikey", timeSeriesClientOptions.ApiKey);
             client.Timeout = TimeSpan.FromMinutes(timeSeriesClientOptions.TimeoutMinutes);
         })
         .ConfigurePrimaryHttpMessageHandler(() => new SocketsHttpHandler { PooledConnectionLifetime = TimeSpan.FromMinutes(2) })

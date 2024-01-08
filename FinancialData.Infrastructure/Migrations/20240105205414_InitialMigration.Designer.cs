@@ -12,7 +12,7 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinancialData.Infrastructure.Migrations
 {
     [DbContext(typeof(FinancialDataContext))]
-    [Migration("20231208235225_InitialMigration")]
+    [Migration("20240105205414_InitialMigration")]
     partial class InitialMigration
     {
         /// <inheritdoc />
@@ -25,7 +25,7 @@ namespace FinancialData.Infrastructure.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("FinancialData.Domain.Entities.Metadata", b =>
+            modelBuilder.Entity("FinancialData.Domain.Entities.MetaData", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -131,11 +131,11 @@ namespace FinancialData.Infrastructure.Migrations
                     b.ToTable("TimeSeries");
                 });
 
-            modelBuilder.Entity("FinancialData.Domain.Entities.Metadata", b =>
+            modelBuilder.Entity("FinancialData.Domain.Entities.MetaData", b =>
                 {
                     b.HasOne("FinancialData.Domain.Entities.Stock", "Stock")
-                        .WithOne("Metadata")
-                        .HasForeignKey("FinancialData.Domain.Entities.Metadata", "StockId")
+                        .WithOne("MetaData")
+                        .HasForeignKey("FinancialData.Domain.Entities.MetaData", "StockId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -155,7 +155,7 @@ namespace FinancialData.Infrastructure.Migrations
 
             modelBuilder.Entity("FinancialData.Domain.Entities.Stock", b =>
                 {
-                    b.Navigation("Metadata");
+                    b.Navigation("MetaData");
 
                     b.Navigation("TimeSeries");
                 });
