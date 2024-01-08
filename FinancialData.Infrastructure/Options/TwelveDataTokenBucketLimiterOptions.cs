@@ -1,6 +1,6 @@
 ﻿using System.Threading.RateLimiting;
 
-namespace FinancialData.Worker.Options;
+namespace FinancialData.Infrastructure.Options;
 
 public class TwelveDataTokenBucketLimiterOptions
 {

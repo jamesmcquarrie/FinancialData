@@ -1,5 +1,5 @@
 ﻿using FinancialData.Worker.Application.Clients;
-using FinancialData.Worker.Options;
+using FinancialData.Infrastructure.Options;
 using System.Net.Http.Headers;
 using System.Threading.RateLimiting;
 using Microsoft.Extensions.Options;

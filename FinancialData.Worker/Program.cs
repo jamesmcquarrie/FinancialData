@@ -1,9 +1,9 @@
 using FinancialData.Worker.Application.Repositories;
 using FinancialData.Worker.Application.Services;
 using FinancialData.Worker.DependencyInjection;
-using FinancialData.Worker.Options.Setup;
-using FinancialData.Infrastructure;
+using FinancialData.Infrastructure.Options.Setup;
 using FinancialData.Infrastructure.Repositories;
+using FinancialData.Infrastructure;
 using Microsoft.EntityFrameworkCore;
 using Serilog;
 using Quartz;

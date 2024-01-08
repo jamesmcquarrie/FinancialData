@@ -1,5 +1,5 @@
 ﻿using FinancialData.Worker.Application.Factories;
-using FinancialData.Worker.Options;
+using FinancialData.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 
 namespace FinancialData.Worker.DependencyInjection;

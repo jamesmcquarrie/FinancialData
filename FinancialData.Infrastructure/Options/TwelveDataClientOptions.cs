@@ -1,4 +1,4 @@
-﻿namespace FinancialData.Worker.Options;
+﻿namespace FinancialData.Infrastructure.Options;
 
 public class TwelveDataClientOptions
 {

@@ -1,5 +1,5 @@
-﻿using FinancialData.Worker.Options;
-using FinancialData.Worker.TimeSeriesJobs;
+﻿using FinancialData.Worker.TimeSeriesJobs;
+using FinancialData.Infrastructure.Options;
 using Microsoft.Extensions.Options;
 using Quartz;
 

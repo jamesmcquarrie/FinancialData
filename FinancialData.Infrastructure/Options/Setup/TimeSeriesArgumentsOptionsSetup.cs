@@ -1,6 +1,7 @@
-﻿using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 
-namespace FinancialData.Worker.Options.Setup;
+namespace FinancialData.Infrastructure.Options.Setup;
 
 public class TimeSeriesArgumentsOptionsSetup : IConfigureOptions<TimeSeriesArgumentsOptions>
 {

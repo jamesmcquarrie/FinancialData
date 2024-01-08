@@ -1,5 +1,5 @@
 ﻿using FinancialData.Worker.Application.Services;
-using FinancialData.Worker.Options;
+using FinancialData.Infrastructure.Options;
 using FinancialData.Common.Configuration;
 using FinancialData.Domain.Enums;
 using FinancialData.Domain.Entities;
