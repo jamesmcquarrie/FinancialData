@@ -39,7 +39,7 @@ public class TimeSeriesService : ITimeSeriesService
 
         var stockDto = new StockDto
         {
-            Metadata = stock.Metadata.ToDto(),
+            MetaData = stock.MetaData.ToDto(),
             TimeSeries = stock.TimeSeries.Select(ts => ts.ToDto())
                 .ToList()
         };
@@ -70,11 +70,11 @@ public class TimeSeriesService : ITimeSeriesService
         return serviceResult;
     }
 
-    public async Task<ServiceResult<MetadataDto>> GetMetadataAsync(int id)
+    public async Task<ServiceResult<MetaDataDto>> GetMetaDataAsync(int id)
     {
-        var serviceResult = new ServiceResult<MetadataDto>();
+        var serviceResult = new ServiceResult<MetaDataDto>();
 
-        var metadata = await _timeSeriesRepository.GetMetadataAsync(id);
+        var metadata = await _timeSeriesRepository.GetMetaDataAsync(id);
 
         if (metadata is null)
         {

@@ -6,9 +6,9 @@ namespace FinancialData.Common.Extensions;
 
 public static class TimeSeriesToEntityExtensions
 {
-    public static Metadata ToEntity(this MetadataDto metaDataDto)
+    public static MetaData ToEntity(this MetaDataDto metaDataDto)
     {
-        return new Metadata
+        return new MetaData
         {
             Symbol = metaDataDto.Symbol,
             Type = metaDataDto.Type,

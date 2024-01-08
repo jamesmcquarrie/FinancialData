@@ -8,39 +8,45 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using RichardSzalay.MockHttp;
+using FinancialData.Worker.Application.Factories;
 
-namespace FinancialData.Worker.UnitTests;
+namespace FinancialData.Worker.UnitTests.TimeSeriesClientUnitTests;
 
-public class TimeSeriesClientUnitTests
+public class TwelveDataTimeSeriesClientUnitTests
 {
     [Fact]
     public async Task GetStockAsync_GetsSuccessfully()
     {
         //Arrange
         var mockHttpClient = new MockHttpMessageHandler();
+        var factory = Substitute.For<ITimeSeriesEndpointFactory>();
 
         var fixture = new Fixture();
         var timeseriesArg = fixture.Customize(new TimeSeriesArgumentsCustomization())
             .Create<TimeSeriesArguments>();
 
-        var uri = $"https://api.twelvedata.com/time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var endpoint = $"time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var uri = $"https://api.twelvedata.com/{endpoint}";
 
-        var stockDto = new StockDto
+        var twelveDataStockDto = new TwelveDataStockDto
         {
-            Metadata = fixture.Create<MetadataDto>(),
+            MetaData = fixture.Create<MetaDataDto>(),
             TimeSeries = fixture.CreateMany<TimeSeriesDto>()
             .ToList(),
         };
 
         mockHttpClient.When(uri)
-            .Respond(HttpStatusCode.OK, JsonContent.Create(stockDto,
+            .Respond(HttpStatusCode.OK, JsonContent.Create(twelveDataStockDto,
                 options: new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         var httpClient = mockHttpClient.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(httpClient);
+        factory.Create(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize)
+            .Returns(endpoint);
+
+        var timeSeriesClient = new TwelveDataTimeSeriesClient(httpClient, factory);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize);
@@ -48,7 +54,7 @@ public class TimeSeriesClientUnitTests
         //Assert
         clientResult.IsError.Should().BeFalse();
         clientResult.ErrorMessage.Should().BeNull();
-        clientResult.Payload.Should().BeEquivalentTo(stockDto);
+        clientResult.Payload.Should().BeEquivalentTo(twelveDataStockDto);
     }
 
     [Theory]
@@ -60,12 +66,14 @@ public class TimeSeriesClientUnitTests
     {
         //Arrange
         var mockHttpClient = new MockHttpMessageHandler();
+        var factory = Substitute.For<ITimeSeriesEndpointFactory>();
 
         var fixture = new Fixture();
         var timeseriesArg = fixture.Customize(new TimeSeriesArgumentsCustomization())
             .Create<TimeSeriesArguments>();
 
-        var uri = $"https://api.twelvedata.com/time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var endpoint = $"time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var uri = $"https://api.twelvedata.com/{endpoint}";
 
         mockHttpClient.When(uri)
             .Respond(httpStatusCode);
@@ -74,7 +82,10 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(httpClient);
+        factory.Create(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize)
+           .Returns(endpoint);
+
+        var timeSeriesClient = new TwelveDataTimeSeriesClient(httpClient, factory);
 
         //Act
         var clientResult = await timeSeriesClient.GetStockAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize);
@@ -90,32 +101,37 @@ public class TimeSeriesClientUnitTests
     {
         //Arrange
         var mockHttpClient = new MockHttpMessageHandler();
+        var factory = Substitute.For<ITimeSeriesEndpointFactory>();
 
         var fixture = new Fixture();
         var timeseriesArg = fixture.Customize(new TimeSeriesArgumentsCustomization())
             .Create<TimeSeriesArguments>();
 
-        var uri = $"https://api.twelvedata.com/time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var endpoint = $"time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var uri = $"https://api.twelvedata.com/{endpoint}";
 
-        var metadataDto = fixture.Create<MetadataDto>();
+        var metadataDto = fixture.Create<MetaDataDto>();
         var timeseriesDtos = fixture.CreateMany<TimeSeriesDto>()
             .ToList();
 
-        var stockDto = new StockDto
+        var twelveDataStockDto = new TwelveDataStockDto
         {
-            Metadata = metadataDto,
-            TimeSeries = timeseriesDtos,
+            MetaData = metadataDto,
+            TimeSeries = timeseriesDtos
         };
 
         mockHttpClient.When(uri)
-            .Respond(HttpStatusCode.OK, JsonContent.Create(stockDto,
+            .Respond(HttpStatusCode.OK, JsonContent.Create(twelveDataStockDto,
                 options: new JsonSerializerOptions() { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower }));
 
         var httpClient = mockHttpClient.ToHttpClient();
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(httpClient);
+        factory.Create(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize)
+           .Returns(endpoint);
+
+        var timeSeriesClient = new TwelveDataTimeSeriesClient(httpClient, factory);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize);
@@ -135,12 +151,14 @@ public class TimeSeriesClientUnitTests
     {
         //Arrange
         var mockHttpClient = new MockHttpMessageHandler();
+        var factory = Substitute.For<ITimeSeriesEndpointFactory>();
 
         var fixture = new Fixture();
         var timeseriesArg = fixture.Customize(new TimeSeriesArgumentsCustomization())
             .Create<TimeSeriesArguments>();
 
-        var uri = $"https://api.twelvedata.com/time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var endpoint = $"time_series?symbol={timeseriesArg.Symbol}&interval={Interval.FromName(timeseriesArg.Interval)}&outputsize={timeseriesArg.OutputSize}";
+        var uri = $"https://api.twelvedata.com/{endpoint}";
 
         mockHttpClient.When(uri)
             .Respond(httpStatusCode);
@@ -149,7 +167,10 @@ public class TimeSeriesClientUnitTests
         httpClient.BaseAddress = new Uri("https://api.twelvedata.com/");
         httpClient.Timeout = TimeSpan.FromMinutes(5);
 
-        var timeSeriesClient = new TimeSeriesClient(httpClient);
+        factory.Create(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize)
+           .Returns(endpoint);
+
+        var timeSeriesClient = new TwelveDataTimeSeriesClient(httpClient, factory);
 
         //Act
         var clientResult = await timeSeriesClient.GetTimeSeriesAsync(timeseriesArg.Symbol, Interval.FromName(timeseriesArg.Interval), timeseriesArg.OutputSize);

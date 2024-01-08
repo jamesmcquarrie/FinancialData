@@ -24,7 +24,7 @@ public class TimeSeriesServiceUnitTests
 
         var stock = new Stock
         {
-            Metadata = fixture.Build<Metadata>()
+            MetaData = fixture.Build<MetaData>()
                 .Without(m => m.Stock)
                 .Create(),
             TimeSeries = fixture.Customize(new TimeSeriesCustomization())
@@ -34,7 +34,7 @@ public class TimeSeriesServiceUnitTests
 
         var stockDto = new StockDto
         {
-            Metadata = stock.Metadata.ToDto(),
+            MetaData = stock.MetaData.ToDto(),
             TimeSeries = stock.TimeSeries.Select(ts => ts.ToDto()).ToList()
         };
 
@@ -126,16 +126,16 @@ public class TimeSeriesServiceUnitTests
 
         var fixture = new Fixture();
 
-        var metadata = fixture.Build<Metadata>()
+        var metadata = fixture.Build<MetaData>()
             .Without(m => m.Stock)
             .Create();
         var metadataDto = metadata.ToDto();
 
-        repository.GetMetadataAsync(1)
+        repository.GetMetaDataAsync(1)
             .Returns(Task.FromResult(metadata));
 
         //Act
-        var result = await timeseriesService.GetMetadataAsync(1);
+        var result = await timeseriesService.GetMetaDataAsync(1);
 
         //Assert
         result.IsError.Should().BeFalse();
@@ -151,11 +151,11 @@ public class TimeSeriesServiceUnitTests
         var repository = Substitute.For<ITimeSeriesRepository>();
         var timeseriesService = new TimeSeriesService(logger, repository);
 
-        repository.GetMetadataAsync(1)
+        repository.GetMetaDataAsync(1)
             .ReturnsNull();
 
         //Act
-        var result = await timeseriesService.GetMetadataAsync(1);
+        var result = await timeseriesService.GetMetaDataAsync(1);
 
         //Assert
         result.IsError.Should().BeTrue();

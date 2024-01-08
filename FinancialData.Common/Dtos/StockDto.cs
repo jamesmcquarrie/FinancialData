@@ -4,8 +4,6 @@ namespace FinancialData.Common.Dtos;
 
 public class StockDto
 {
-    [JsonPropertyName("meta")]
-    public required MetadataDto Metadata { get; set; }
-    [JsonPropertyName("values")]
-    public required ICollection<TimeSeriesDto> TimeSeries { get; set; }
+    public virtual MetaDataDto MetaData { get; set; }
+    public virtual ICollection<TimeSeriesDto> TimeSeries { get; set; } = new List<TimeSeriesDto>();
 }

@@ -19,7 +19,7 @@ public class MetadataDtoCustomization : ICustomization
 
     public void Customize(IFixture fixture)
     {
-        fixture.Customize<MetadataDto>(composer => composer
+        fixture.Customize<MetaDataDto>(composer => composer
             .With(m => m.Symbol, _args.Symbol)
             .With(m => m.Interval, _args.Interval));           
     }
@@ -52,7 +52,7 @@ public class MetadataCustomization : ICustomization
 
     public void Customize(IFixture fixture)
     {
-        fixture.Customize<Metadata>(composer => composer
+        fixture.Customize<MetaData>(composer => composer
             .With(m => m.Symbol, _args.Symbol)
             .With(m => m.Interval, _args.Interval)
             .Without(x => x.Stock));

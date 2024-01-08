@@ -17,7 +17,7 @@ public class TimeSeriesRepository : ITimeSeriesRepository
     {
         var stock = await _context.Stocks
             .Where(s  => s.Id == id)
-            .Include(s => s.Metadata)
+            .Include(s => s.MetaData)
             .Include(s => s.TimeSeries
                 .OrderByDescending(ts => ts.Datetime)
                 .Take(timeseriesOutputSize))
@@ -37,7 +37,7 @@ public class TimeSeriesRepository : ITimeSeriesRepository
         return timeseries;
     }
 
-    public async Task<Metadata> GetMetadataAsync(int id)
+    public async Task<MetaData> GetMetaDataAsync(int id)
     {
         var metadata = await _context.MetaData
             .SingleOrDefaultAsync(m => m.Id == id);

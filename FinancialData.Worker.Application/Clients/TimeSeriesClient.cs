@@ -28,7 +28,7 @@ public class TimeSeriesClient : ITimeSeriesClient
         if (!result.IsError) 
         {
             var stockDto = await response.Content
-                .ReadFromJsonAsync<StockDto>(new JsonSerializerOptions()
+                .ReadFromJsonAsync<TwelveDataStockDto>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
             result.Payload = stockDto;
@@ -47,7 +47,7 @@ public class TimeSeriesClient : ITimeSeriesClient
         if (!result.IsError) 
         {
             var stockDto = await response.Content
-                .ReadFromJsonAsync<StockDto>(new JsonSerializerOptions()
+                .ReadFromJsonAsync<TwelveDataStockDto>(new JsonSerializerOptions()
                 { PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower });
 
             result.Payload = stockDto!.TimeSeries;

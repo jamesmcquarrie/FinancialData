@@ -6,9 +6,9 @@ namespace FinancialData.Common.Extensions;
 
 public static class TimeSeriesToDTOExtensions
 {
-    public static MetadataDto ToDto(this Metadata metaData)
+    public static MetaDataDto ToDto(this MetaData metaData)
     {
-        return new MetadataDto
+        return new MetaDataDto
         {
             Symbol = metaData.Symbol,
             Type = metaData.Type,

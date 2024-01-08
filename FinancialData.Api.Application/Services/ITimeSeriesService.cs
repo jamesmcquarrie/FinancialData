@@ -7,5 +7,5 @@ public interface ITimeSeriesService
 {
     Task<ServiceResult<StockDto>> GetStockAsync(int id, int timeseriesOutputSize);
     Task<ServiceResult<IEnumerable<TimeSeriesDto>>> GetTimeSeriesAsync(int id, int timeseriesOutputSize);
-    Task<ServiceResult<MetadataDto>> GetMetadataAsync(int id);
+    Task<ServiceResult<MetaDataDto>> GetMetaDataAsync(int id);
 }

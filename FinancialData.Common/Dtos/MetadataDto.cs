@@ -1,6 +1,6 @@
 ﻿namespace FinancialData.Common.Dtos;
 
-public class MetadataDto
+public class MetaDataDto
 {
     public required string Symbol { get; set; }
     public required string Type { get; set; }

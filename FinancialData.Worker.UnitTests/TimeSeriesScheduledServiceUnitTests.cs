@@ -2,9 +2,9 @@
 using FinancialData.Common.Configuration;
 using FinancialData.Common.Dtos;
 using FinancialData.Common.Extensions;
+using FinancialData.Common.Customizations;
 using FinancialData.Domain.Entities;
 using FinancialData.Domain.Enums;
-using FinancialData.Common.Customizations;
 using FinancialData.Worker.Application.Clients;
 using FinancialData.Worker.Application.Repositories;
 using FinancialData.Worker.Application.Services;
@@ -22,8 +22,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -35,8 +35,8 @@ public class TimeSeriesScheduledServiceUnitTests
         {
             Payload = new StockDto
             {
-                Metadata = fixture.Customize(new MetadataDtoCustomization(timeseriesArgs))
-                    .Create<MetadataDto>(),
+                MetaData = fixture.Customize(new MetadataDtoCustomization(timeseriesArgs))
+                    .Create<MetaDataDto>(),
                 TimeSeries = fixture.Customize(new TimeSeriesDtoCustomization())
                     .CreateMany<TimeSeriesDto>()
                     .ToList()
@@ -51,7 +51,7 @@ public class TimeSeriesScheduledServiceUnitTests
 
         var stock = new Stock
         {
-            Metadata = serviceResult.Payload.Metadata.ToEntity(),
+            MetaData = serviceResult.Payload.MetaData.ToEntity(),
             TimeSeries = serviceResult.Payload.TimeSeries.Select(ts => ts.ToEntity()).ToList()
         };
 
@@ -71,8 +71,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -104,8 +104,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -115,8 +115,8 @@ public class TimeSeriesScheduledServiceUnitTests
 
         var stock = new Stock
         {
-            Metadata = fixture.Customize(new MetadataCustomization(timeseriesArgs))
-                .Create<Metadata>(),
+            MetaData = fixture.Customize(new MetadataCustomization(timeseriesArgs))
+                .Create<MetaData>(),
             TimeSeries = fixture.Customize(new TimeSeriesCustomization())
                 .CreateMany<TimeSeries>()
                 .ToList()
@@ -137,8 +137,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -161,8 +161,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -185,8 +185,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -209,8 +209,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -250,8 +250,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -280,8 +280,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -304,8 +304,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -328,8 +328,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -352,8 +352,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();
@@ -363,8 +363,8 @@ public class TimeSeriesScheduledServiceUnitTests
 
         var stock = new Stock
         {
-            Metadata = fixture.Customize(new MetadataCustomization(timeseriesArgs))
-                .Create<Metadata>(),
+            MetaData = fixture.Customize(new MetadataCustomization(timeseriesArgs))
+                .Create<MetaData>(),
             TimeSeries = fixture.Customize(new TimeSeriesCustomization())
                 .CreateMany<TimeSeries>()
                 .ToList()
@@ -384,8 +384,8 @@ public class TimeSeriesScheduledServiceUnitTests
     {
         //Arrange
         var logger = Substitute.For<ILogger<TimeSeriesScheduledService>>();
-        var client = Substitute.For<ITimeSeriesClient>();
         var repository = Substitute.For<ITimeSeriesScheduledRepository>();
+        var client = Substitute.For<ITimeSeriesClient>();
         var timeseriesScheduledService = new TimeSeriesScheduledService(logger, client, repository);
 
         var fixture = new Fixture();

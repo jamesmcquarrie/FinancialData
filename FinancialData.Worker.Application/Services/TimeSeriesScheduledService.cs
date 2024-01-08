@@ -1,5 +1,5 @@
-﻿using FinancialData.Worker.Application.Clients;
-using FinancialData.Worker.Application.Repositories;
+﻿using FinancialData.Worker.Application.Repositories;
+using FinancialData.Worker.Application.Clients;
 using FinancialData.Common.Extensions;
 using FinancialData.Domain.Entities;
 using FinancialData.Domain.Enums;
@@ -43,8 +43,8 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
                 stock = new Stock
                 {
-                    Metadata = clientResult.Payload!
-                        .Metadata
+                    MetaData = clientResult.Payload!
+                        .MetaData
                         .ToEntity(),
                     TimeSeries = clientResult.Payload!
                         .TimeSeries
@@ -91,17 +91,17 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
     {
         try
         {
-            var result = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
+            var clientResult = await _timeSeriesClient.GetTimeSeriesAsync(symbol, interval, outputSize);
 
             var newTimeseries = Array.Empty<TimeSeries>();
 
-            if (!result.IsError)
+            if (!clientResult.IsError)
             {
                 _logger.LogInformation("Timeseries for symbol: {Symbol} interval: {Interval} retrieved from API", symbol, interval.Name);
 
                 var existingTimeseries = await _timeSeriesRepository.GetTimeSeriesAsync(symbol, interval);
 
-                newTimeseries = result.Payload!
+                newTimeseries = clientResult.Payload!
                     .Select(newTs => newTs.ToEntity())
                     .Where(newTs => !existingTimeseries
                         .Any(oldTs => oldTs.Datetime == newTs.Datetime))
@@ -125,7 +125,7 @@ public class TimeSeriesScheduledService : ITimeSeriesScheduledService
 
             else
             {
-                _logger.LogError("Timeseries for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", symbol, interval.Name, result.ErrorMessage);
+                _logger.LogError("Timeseries for symbol: {Symbol} interval: {Interval} not retrieved from API - ERROR MESSAGE: {Message}", symbol, interval.Name, clientResult.ErrorMessage);
             }
 
             return newTimeseries;

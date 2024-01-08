@@ -1,6 +1,6 @@
 ﻿namespace FinancialData.Domain.Entities;
 
-public class Metadata
+public class MetaData
 {
     public int Id { get; set; }
     public required string Symbol { get; set; }

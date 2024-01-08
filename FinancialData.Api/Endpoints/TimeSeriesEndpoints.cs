@@ -26,7 +26,7 @@ public static class TimeSeriesEndpoints
 
         app.MapGet("/api/timeseries-data/metadata/{Id}", async (int id, ITimeSeriesService timeseriesService) =>
         {
-            var serviceResult = await timeseriesService.GetMetadataAsync(id);
+            var serviceResult = await timeseriesService.GetMetaDataAsync(id);
 
             return serviceResult.IsError ? Results.BadRequest(serviceResult.ErrorMessage) : Results.Ok(serviceResult.Payload);
         })
